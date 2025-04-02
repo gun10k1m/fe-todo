@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "local-dev": "next dev",
+    "build:dev": "next build",
+    "build:stg": "next build",
+    "build:prd": "next build",
     "start": "next start",
     "lint": "next lint --no-cache",
     "format": "prettier --check --ignore-path .gitignore .",

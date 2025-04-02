@@ -1,0 +1,41 @@
+name: PR Build Check
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - stg
+      - prd
+
+jobs:
+  build_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.19.0'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Build Script Based on Target Branch
+        run: |
+          TARGET_BRANCH=${{ github.event.pull_request.base.ref }}
+          echo "Target branch is ${TARGET_BRANCH}"
+          if [ "${TARGET_BRANCH}" = "dev" ]; then
+            echo "Running build for DEV environment"
+            npm run build:dev
+          elif [ "${TARGET_BRANCH}" = "stg" ]; then
+            echo "Running build for STG environment"
+            npm run build:stg
+          elif [ "${TARGET_BRANCH}" = "prd" ]; then
+            echo "Running build for PRD environment"
+            npm run build:prd
+          else
+            echo "No matching environment found. Exiting..."
+            exit 1
+          fi
