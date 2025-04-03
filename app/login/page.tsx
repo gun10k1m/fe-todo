@@ -1,5 +1,6 @@
 'use client';
 
+import { Card } from '@/components/ui/card';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -8,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const loginFormSchema = z.object({
   email: z.string().min(1, { message: '이메일을 입력해주세요.' }).email('이메일 형식이 올바르지 않습니다.'),
@@ -50,38 +52,52 @@ export default function LoginPage() {
   }
 
   return (
-    <div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="이메일" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="비밀번호" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit">Submit</Button>
-        </form>
-      </Form>
+    <div className="flex justify-center items-center h-screen">
+      <Card className="w-full max-w-md p-10">
+        <h1 className="text-2xl font-bold mb-4">로그인</h1>
+        <Form {...form}>
+          <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="flex gap-3 flex-col">
+                  <div className="flex gap-1 items-center">
+                    <span className="text-red-500">*</span>
+                    <FormLabel>이메일</FormLabel>
+                  </div>
+                  <FormControl>
+                    <Input placeholder="이메일을 입력해주세요." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex gap-1 items-center">
+                    <span className="text-red-500">*</span>
+                    <FormLabel>비밀번호</FormLabel>
+                  </div>
+                  <FormControl>
+                    <Input type="password" placeholder="비밀번호를 입력해주세요." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="flex justify-center w-full mt-4 cursor-pointer">
+              로그인
+            </Button>
+          </form>
+        </Form>
+        <Link href="/signup" className="flex justify-center mt-4 text-sm text-gray-500 cursor-pointer">
+          회원가입 하러 가기
+        </Link>
+      </Card>
     </div>
   );
 }
