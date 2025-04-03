@@ -9,6 +9,8 @@ export async function POST(request: Request) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
+  console.log(email, password);
+
   // 사용자 정보 조회 (이메일로)
   const { data: user, error } = await supabase.from('users').select('*').eq('email', email).single();
 
