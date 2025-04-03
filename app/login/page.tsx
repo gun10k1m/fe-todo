@@ -38,6 +38,7 @@ export default function LoginPage() {
       formData.append('email', values.email);
       formData.append('password', values.password);
 
+      //response의 ok 분기, fetch 자체를 util화 , 오류처리 전역으로 관리
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         body: formData,
