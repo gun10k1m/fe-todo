@@ -12,10 +12,12 @@ import { useMutation } from '@tanstack/react-query';
 import { createClient } from '@/utils/client';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { LoaderCircle } from 'lucide-react';
 
 // todo
-// 1. zod 검사 파일 따로 만들기
-// 2. mutation 로직 파일 따로 만들기
+// 1. zod 검사 파일
+// 2. mutation 로직 파일
+// 3. interface 파일
 
 export default function SignupPage() {
   const supabase = createClient();
@@ -42,11 +44,10 @@ export default function SignupPage() {
   });
 
   const onSubmit = (data: SignupForm) => {
-    // signup(data);
-    console.log(data);
+    signup(data);
   };
 
-  const { mutate: signup, isPending } = useMutation({
+  const { mutate: signup, isPending } = useMutation<SignupForm, Error, SignupForm>({
     mutationKey: ['signup'],
     mutationFn: async (data: SignupForm) => {
       const { error } = await supabase.auth.signUp({ email: data.email, password: data.password });
@@ -116,12 +117,20 @@ export default function SignupPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="flex justify-center w-full mt-4">
-              회원가입
+
+            <Button type="submit" className="flex justify-center w-full mt-4 cursor-pointer" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  처리중...
+                </>
+              ) : (
+                '회원가입'
+              )}
             </Button>
           </form>
         </Form>
-        <Link href="/login" className="flex justify-center mt-4 text-sm text-gray-500">
+        <Link href="/login" className="flex justify-center mt-4 text-sm text-gray-500 cursor-pointer">
           로그인 하러 가기
         </Link>
       </Card>
