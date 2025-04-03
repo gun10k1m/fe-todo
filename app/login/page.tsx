@@ -10,12 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 const loginFormSchema = z.object({
-  email: z.string().email({
-    message: '유효한 이메일 주소를 입력해주세요.',
-  }),
-  password: z.string().min(6, {
-    message: '비밀번호는 최소 6자 이상이어야 합니다.',
-  }),
+  email: z.string().min(1, { message: '이메일을 입력해주세요.' }).email('이메일 형식이 올바르지 않습니다.'),
+  password: z.string().min(8, { message: '8자 이상 입력해주세요.' }),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -33,6 +29,7 @@ export default function LoginPage() {
 
   // Login Mutation
   const loginMutation = useMutation({
+    mutationKey: ['login'],
     mutationFn: async (values: LoginFormValues) => {
       const formData = new FormData();
       formData.append('email', values.email);
