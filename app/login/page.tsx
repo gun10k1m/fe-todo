@@ -8,21 +8,25 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-const formSchema = z.object({
-  username: z.string().min(2, {
-    message: 'Username must be at least 2 characters.',
+const loginFormSchema = z.object({
+  email: z.string().email({
+    message: 'Invalid email address.',
+  }),
+  password: z.string().min(6, {
+    message: 'Password must be at least 6 characters.',
   }),
 });
 
 export default function LoginPage() {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<z.infer<typeof loginFormSchema>>({
     defaultValues: {
-      username: '',
+      email: '',
+      password: '',
     },
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(loginFormSchema),
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof loginFormSchema>) {
     console.log(values);
   }
 
@@ -31,14 +35,26 @@ export default function LoginPage() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="username"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="유저 네임" {...field} />
+                <Input placeholder="이메일" {...field} />
               </FormControl>
-              <FormDescription>This is your public display name.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="비밀번호" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
