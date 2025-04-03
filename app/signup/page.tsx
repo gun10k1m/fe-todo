@@ -9,9 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
-import { createClient } from '@/utils/client';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle } from 'lucide-react';
 
 // todo
@@ -20,18 +18,16 @@ import { LoaderCircle } from 'lucide-react';
 // 3. interface 파일
 
 export default function SignupPage() {
-  const supabase = createClient();
   const router = useRouter();
-  const { toast } = useToast();
   interface SignupForm {
     email: string;
     password: string;
-    username?: string;
+    name?: string;
   }
   const registerSchema = z.object({
     email: z.string().min(1, { message: '이메일을 입력해주세요.' }).email('이메일 형식이 올바르지 않습니다.'),
     password: z.string().min(8, { message: '8자 이상 입력해주세요.' }),
-    username: z.string(),
+    name: z.string(),
   });
 
   const form = useForm<SignupForm>({
@@ -39,7 +35,7 @@ export default function SignupPage() {
     defaultValues: {
       email: '',
       password: '',
-      username: '',
+      name: '',
     },
   });
 
@@ -50,20 +46,22 @@ export default function SignupPage() {
   const { mutate: signup, isPending } = useMutation<SignupForm, Error, SignupForm>({
     mutationKey: ['signup'],
     mutationFn: async (data: SignupForm) => {
-      const { error } = await supabase.auth.signUp({ email: data.email, password: data.password });
-      if (error) {
-        throw error;
+      const formData = new FormData();
+      formData.append('email', data.email);
+      formData.append('password', data.password);
+      if (data.name) {
+        formData.append('name', data.name);
+      }
+
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.url) {
+        router.push(response.url);
       }
       return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: '회원가입이 완료되었습니다.',
-      });
-      router.push('/');
-    },
-    onError: (error) => {
-      console.error(error);
     },
   });
   return (
@@ -106,12 +104,12 @@ export default function SignupPage() {
             />
             <FormField
               control={form.control}
-              name="username"
+              name="name"
               render={({ field }) => (
                 <FormItem className="flex gap-3 flex-col">
                   <FormLabel>이름</FormLabel>
                   <FormControl>
-                    <Input type="username" placeholder="이름을 입력해주세요." {...field} />
+                    <Input type="name" placeholder="이름을 입력해주세요." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
