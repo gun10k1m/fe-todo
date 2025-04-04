@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
 import { useForm } from 'react-hook-form';
 
 interface todoCreateForm {
@@ -32,14 +33,16 @@ export default function TestCreate() {
   const createTodoMutation = useMutation({
     mutationKey: ['createTodo'],
     mutationFn: async (values: todoCreateForm) => {
-      const response = await fetch('/api/todos', {
-        method: 'POST',
-        body: JSON.stringify(values),
+      const response = await axios.post('/api/todos', values, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
-      console.log(response);
+      return response.data;
     },
   });
+
   function onSubmit(values: todoCreateForm) {
     createTodoMutation.mutate(values);
   }
