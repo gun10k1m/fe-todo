@@ -2,17 +2,15 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const loginPath = '/login';
-  const signupPath = '/signup';
-
   const userId = request.cookies.get('userId');
-
   const { pathname } = request.nextUrl;
 
-  const isAuthPage = pathname === loginPath || pathname === signupPath;
+  if (pathname.startsWith('/auth')) {
+    if (userId) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
 
-  if (isAuthPage && userId) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.next();
   }
 
   return updateSession(request);
