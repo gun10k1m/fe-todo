@@ -8,20 +8,29 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { LoaderCircle } from 'lucide-react';
-import { SignupFormValues } from '@/interfaces/auth.interface';
-import { useSignupMutation } from '@/queries/auth/mutation';
+
+// todo
+// 1. zod 검사 파일
+// 2. mutation 로직 파일
+// 3. interface 파일
 
 export default function SignupPage() {
-  const { mutate: signupMutation, isPending } = useSignupMutation();
-
+  const router = useRouter();
+  interface SignupForm {
+    email: string;
+    password: string;
+    name?: string;
+  }
   const registerSchema = z.object({
     email: z.string().min(1, { message: '이메일을 입력해주세요.' }).email('이메일 형식이 올바르지 않습니다.'),
     password: z.string().min(8, { message: '8자 이상 입력해주세요.' }),
     name: z.string(),
   });
 
-  const form = useForm<SignupFormValues>({
+  const form = useForm<SignupForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: '',
@@ -30,10 +39,31 @@ export default function SignupPage() {
     },
   });
 
-  const onSubmit = (data: SignupFormValues) => {
-    signupMutation(data);
+  const onSubmit = (data: SignupForm) => {
+    signup(data);
   };
 
+  const { mutate: signup, isPending } = useMutation<SignupForm, Error, SignupForm>({
+    mutationKey: ['signup'],
+    mutationFn: async (data: SignupForm) => {
+      const formData = new FormData();
+      formData.append('email', data.email);
+      formData.append('password', data.password);
+      if (data.name) {
+        formData.append('name', data.name);
+      }
+
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.url) {
+        router.push(response.url);
+      }
+      return data;
+    },
+  });
   return (
     <div className="flex justify-center items-center h-screen ">
       <Card className="w-full max-w-md p-10">
@@ -98,7 +128,7 @@ export default function SignupPage() {
             </Button>
           </form>
         </Form>
-        <Link href="/auth/login" className="flex justify-center mt-4 text-sm text-gray-500 cursor-pointer">
+        <Link href="/login" className="flex justify-center mt-4 text-sm text-gray-500 cursor-pointer">
           로그인 하러 가기
         </Link>
       </Card>
