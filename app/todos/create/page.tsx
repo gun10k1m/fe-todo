@@ -33,16 +33,14 @@ export default function TestCreate() {
   const createTodoMutation = useMutation({
     mutationKey: ['createTodo'],
     mutationFn: async (values: todoCreateForm) => {
-      const response = await axios.post('/api/todos', values, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch('/api/todos', {
+        method: 'POST',
+        body: JSON.stringify(values),
       });
 
-      return response.data;
+      console.log(response);
     },
   });
-
   function onSubmit(values: todoCreateForm) {
     createTodoMutation.mutate(values);
   }
