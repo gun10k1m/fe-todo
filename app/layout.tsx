@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import RecoilProvider from '@/providers/RecoilProvider';
 import QueryClientProvider from '@/providers/QueryClientProvider';
+import ErrorBoundary from '@/providers/ErrorBoundary';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -29,7 +30,9 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <RecoilProvider>
-          <QueryClientProvider>{children}</QueryClientProvider>
+          <QueryClientProvider>
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </QueryClientProvider>
         </RecoilProvider>
       </body>
     </html>
