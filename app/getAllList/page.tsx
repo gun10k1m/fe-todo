@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TodoProps {
   id: number;
@@ -25,19 +26,36 @@ const fetchAllList = async () => {
   return data.todos;
 };
 
+const patchCompletedList = async (id: number, completed: boolean) => {
+  const response = await fetch(`/api/todos/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ completed: !completed }),
+  });
+  const data = await response.json();
+  return data;
+};
+
 export default function GetAllList() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['todoAllList'],
     queryFn: fetchAllList,
   });
 
-  const handleCheckboxClick = (id: number) => {
-    console.log(id);
-  };
+  const queryClient = useQueryClient();
+
+  const { mutate: patchCompleted } = useMutation({
+    mutationFn: ({ id, completed }: { id: number; completed: boolean }) => patchCompletedList(id, completed),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todoAllList'] });
+    },
+  });
 
   return (
     <div>
-      <h1>모든 투두 리스트</h1>
+      <h1>투두 리스트</h1>
       {isLoading ? (
         <div>로딩 중...</div>
       ) : error ? (
@@ -49,7 +67,11 @@ export default function GetAllList() {
               {data?.map((todo: TodoProps) => (
                 <AccordionItem value={todo.id.toString()} key={todo.id}>
                   <div className="flex">
-                    <Checkbox className="flex mt-5 mr-5" onClick={() => handleCheckboxClick(todo.id)} />
+                    <Checkbox
+                      checked={todo.completed}
+                      className="flex mt-5 mr-5"
+                      onClick={() => patchCompleted({ id: todo.id, completed: todo.completed })}
+                    />
                     <div className="flex-1">
                       <AccordionTrigger>
                         <h3>{todo.title}</h3>
