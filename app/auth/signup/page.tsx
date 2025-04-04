@@ -128,7 +128,7 @@ export default function SignupPage() {
             </Button>
           </form>
         </Form>
-        <Link href="/login" className="flex justify-center mt-4 text-sm text-gray-500 cursor-pointer">
+        <Link href="/auth/login" className="flex justify-center mt-4 text-sm text-gray-500 cursor-pointer">
           로그인 하러 가기
         </Link>
       </Card>
