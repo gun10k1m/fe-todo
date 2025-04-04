@@ -14,7 +14,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
 import { useForm } from 'react-hook-form';
 
 interface todoCreateForm {
@@ -38,7 +37,9 @@ export default function TestCreate() {
         body: JSON.stringify(values),
       });
 
-      console.log(response);
+      if (response.status >= 400) {
+        throw new Error();
+      }
     },
   });
   function onSubmit(values: todoCreateForm) {
