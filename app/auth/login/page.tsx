@@ -94,7 +94,7 @@ export default function LoginPage() {
             </Button>
           </form>
         </Form>
-        <Link href="/auth/signup" className="flex justify-center mt-4 text-sm text-gray-500 cursor-pointer">
+        <Link href="auth/signup" className="flex justify-center mt-4 text-sm text-gray-500 cursor-pointer">
           회원가입 하러 가기
         </Link>
       </Card>
