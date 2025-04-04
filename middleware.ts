@@ -1,6 +1,23 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+export function middleware(request: NextRequest) {
+  const loginPath = '/login';
+  const signupPath = '/signup';
+
+  const userId = request.cookies.get('userId');
+
+  const { pathname } = request.nextUrl;
+
+  const isAuthPage = pathname === loginPath || pathname === signupPath;
+
+  if (isAuthPage && userId) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  return updateSession(request);
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -30,3 +47,7 @@ export async function updateSession(request: NextRequest) {
 
   return supabaseResponse;
 }
+
+export const config = {
+  matcher: ['/((?!next/static|_next/image|favicon.ico).*)'],
+};
