@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from '@/components/ui/button'; // ShadUI Button 컴포넌트
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
   return (
@@ -16,6 +16,9 @@ export default function Home() {
         </Link>
         <a href="/auth/login">
           <Button variant="outline">Login</Button>
+        </a>
+        <a href="/todos/create">
+          <Button variant="outline">Create todo</Button>
         </a>
       </div>
     </div>
