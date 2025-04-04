@@ -2,14 +2,13 @@
 
 import { Card } from '@/components/ui/card';
 import { useForm } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useLoginMutation } from '@/queries/auth/mutation';
 
 const loginFormSchema = z.object({
   email: z.string().min(1, { message: '이메일을 입력해주세요.' }).email('이메일 형식이 올바르지 않습니다.'),
@@ -19,8 +18,6 @@ const loginFormSchema = z.object({
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
-
   const form = useForm<LoginFormValues>({
     defaultValues: {
       email: '',
@@ -29,26 +26,10 @@ export default function LoginPage() {
     resolver: zodResolver(loginFormSchema),
   });
 
-  // Login Mutation
-  const loginMutation = useMutation({
-    mutationKey: ['login'],
-    mutationFn: async (values: LoginFormValues) => {
-      const formData = new FormData();
-      formData.append('email', values.email);
-      formData.append('password', values.password);
-
-      //response의 ok 분기, fetch 자체를 util화 , 오류처리 전역으로 관리
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        body: formData,
-      });
-
-      router.push(response.url);
-    },
-  });
+  const { mutate: loginMutation } = useLoginMutation();
 
   function onSubmit(values: LoginFormValues) {
-    loginMutation.mutate(values);
+    loginMutation(values);
   }
 
   return (
