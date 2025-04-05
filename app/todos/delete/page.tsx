@@ -6,11 +6,33 @@ import { Button } from '@/components/ui/button';
 import { Trash2, LoaderCircle } from 'lucide-react';
 import { TodoProps } from '@/interfaces/todos.interface';
 import { useGetAllList } from '@/queries/todos/queries';
-import { usePatchCompletedList } from '@/queries/todos/mutation';
+import { useDeleteList, usePatchCompletedList } from '@/queries/todos/mutation';
+import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export default function DeletePage() {
   const { data, isLoading, error } = useGetAllList();
   const { mutate: patchCompleted } = usePatchCompletedList();
+  const { mutate: deleteTodo, isPending: isDeleting } = useDeleteList();
+  const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
+
+  const handleDelete = (id: number) => {
+    setTodoToDelete(id);
+    // 확인 후 삭제 실행
+    if (confirm('정말로 이 할 일을 삭제하시겠습니까?')) {
+      deleteTodo(id, {
+        onSuccess: () => {
+          toast({
+            title: '삭제 완료',
+            description: '할 일이 성공적으로 삭제되었습니다.',
+          });
+          setTodoToDelete(null);
+        },
+      });
+    } else {
+      setTodoToDelete(null);
+    }
+  };
 
   return (
     <div>
@@ -41,8 +63,17 @@ export default function DeletePage() {
                       <AccordionContent>{todo.description}</AccordionContent>
                     </div>
                     {/* 삭제 구현 부분 */}
-                    <Button variant="outline" size="icon">
-                      <Trash2 className="stroke-red-400" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleDelete(todo.id)}
+                      disabled={isDeleting && todoToDelete === todo.id}
+                    >
+                      {isDeleting && todoToDelete === todo.id ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="stroke-red-400" />
+                      )}
                     </Button>
                   </div>
                 </AccordionItem>

@@ -23,3 +23,24 @@ export const usePatchCompletedList = () => {
     },
   });
 };
+
+export const deleteList = async (id: number) => {
+  const response = await fetch(`/api/todos/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error();
+  }
+};
+
+export const useDeleteList = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => deleteList(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+  });
+};
