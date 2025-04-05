@@ -1,4 +1,30 @@
+import { TodoCreateFormValues } from '@/interfaces/todos.interface';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+// 리스트 생성
+export const createTodo = async (values: TodoCreateFormValues) => {
+  const response = await fetch('/api/todos', {
+    method: 'POST',
+    body: JSON.stringify(values),
+  });
+
+  if (!response.ok) {
+    throw new Error();
+  }
+
+  return response.json();
+};
+
+export const useCreateTodo = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createTodo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+  });
+};
 
 // 리스트 완료 여부 수정
 const patchCompletedList = async (id: number, completed: boolean) => {
@@ -24,6 +50,7 @@ export const usePatchCompletedList = () => {
   });
 };
 
+// 리스트 삭제
 export const deleteList = async (id: number) => {
   const response = await fetch(`/api/todos/${id}`, {
     method: 'DELETE',
@@ -32,6 +59,8 @@ export const deleteList = async (id: number) => {
   if (!response.ok) {
     throw new Error();
   }
+
+  return response.json();
 };
 
 export const useDeleteList = () => {
