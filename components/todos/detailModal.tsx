@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useGetTodoDetail } from '@/queries/todos/queries';
 
 interface TodoDetailModalProps {
   id: number | null;
@@ -18,11 +19,12 @@ interface TodoDetailModalProps {
 }
 
 export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps) {
+  const { data, isLoading, error } = useGetTodoDetail(open ? id : null);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Todo Title</DialogTitle>
+          <DialogTitle>Todo.title</DialogTitle>
           <DialogDescription>Todo Descriptioin</DialogDescription>
         </DialogHeader>
         <DialogFooter>

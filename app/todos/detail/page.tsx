@@ -66,7 +66,16 @@ export default function GetAllList() {
             </Accordion>
           </div>
 
-          <TodoDetailModal id={selectedTodoId} open={detailOpen} onOpenChange={setDetailOpen} />
+          <TodoDetailModal
+            id={selectedTodoId}
+            open={detailOpen}
+            onOpenChange={(open) => {
+              setDetailOpen(open);
+              if (!open) {
+                setSelectedTodoId(null);
+              }
+            }}
+          />
         </>
       )}
     </div>

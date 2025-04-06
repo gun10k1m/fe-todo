@@ -13,3 +13,30 @@ export const useGetAllList = () => {
     queryFn: () => getTodos(),
   });
 };
+
+export const getTodoDetail = async (id: number | null) => {
+  if (id === null) {
+    return null;
+  }
+
+  const response = await fetch(`/api/todos/${id}`);
+
+  if (!response.ok) {
+    throw new Error('할 일을 조회하는데 실패했습니다.');
+  }
+
+  const data = await response.json();
+
+  // 콘솔값 출력
+  console.log(data.todo);
+
+  return data.todo || null;
+};
+
+export const useGetTodoDetail = (id: number | null) => {
+  return useQuery({
+    queryKey: ['todos', 'detail', id],
+    queryFn: () => getTodoDetail(id),
+    enabled: id !== null && id !== undefined,
+  });
+};
