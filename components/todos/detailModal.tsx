@@ -19,7 +19,6 @@ interface TodoDetailModalProps {
 export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps) {
   const { data, isLoading, error } = useGetTodoDetail(open ? id : null);
   const [title, setTitle] = useState('');
-  const [titleError, setTitleError] = useState('');
   const [description, setDescription] = useState('');
   const { mutate, isPending } = useUpdateTodo();
 
@@ -29,19 +28,12 @@ export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps
     if (data) {
       setTitle(data.title || '');
       setDescription(data.description || '');
-      setTitleError('');
     }
   }, [data]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-
-    if (!newTitle.trim()) {
-      setTitleError('제목을 입력해주세요');
-    } else {
-      setTitleError('');
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
