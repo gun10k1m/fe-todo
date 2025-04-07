@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LoaderCircle } from 'lucide-react';
@@ -28,7 +29,7 @@ const getValidOffset = (param: string | null): number => {
 
 const LIMIT = 10;
 
-export default function GetAllList() {
+function TodoList() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const completedParam = searchParams.get('completed');
@@ -91,6 +92,16 @@ export default function GetAllList() {
     }
   }, [data, isInfiniteMode]);
 
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (completed) params.set('completed', 'true');
+    if (debouncedKeyword) params.set('keyword', debouncedKeyword);
+    if (offset > 0) params.set('offset', offset.toString());
+    if (isInfiniteMode) params.set('all', 'true');
+
+    router.replace(`/todos?${params.toString()}`);
+  }, [completed, debouncedKeyword, offset, isInfiniteMode, router]);
+
   const lastTodoElementRefCallback = useCallback(
     (node: HTMLDivElement | null) => {
       if (isLoading) return;
@@ -107,16 +118,6 @@ export default function GetAllList() {
     },
     [isLoading, shouldLoadMore],
   );
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (completed) params.set('completed', 'true');
-    if (debouncedKeyword) params.set('keyword', debouncedKeyword);
-    if (offset > 0) params.set('offset', offset.toString());
-    if (isInfiniteMode) params.set('all', 'true');
-
-    router.replace(`/todos?${params.toString()}`);
-  }, [completed, debouncedKeyword, offset, isInfiniteMode, router]);
 
   return (
     <div className="p-8">
@@ -264,5 +265,13 @@ export default function GetAllList() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function GetAllList() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-screen">로딩 중...</div>}>
+      <TodoList />
+    </Suspense>
   );
 }
