@@ -20,7 +20,7 @@ export default function QueryClientProvider({ children }: { children: React.Reac
               console.error('Mutation 오류:', error);
               toast({
                 variant: 'destructive',
-                title: '오류가 발생했습니다',
+                title: '에러 발생',
                 description: error?.message || '알 수 없는 오류가 발생했습니다',
               });
             },

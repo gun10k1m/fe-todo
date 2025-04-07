@@ -1,4 +1,3 @@
-// components/TodoDetailModal.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Skeleton } from '../ui/skeleton';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { useUpdateTodo } from '@/queries/todos/mutation';
+import { toast } from '@/hooks/use-toast';
 
 interface TodoDetailModalProps {
   id: number | null;
@@ -43,6 +43,12 @@ export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps
         { id, title, description },
         {
           onSuccess: () => {
+            toast({
+              variant: 'default',
+              className: 'bg-green-500 text-white',
+              title: '수정 완료',
+              description: '할 일이 성공적으로 수정되었습니다.',
+            });
             onOpenChange(false);
           },
         },
