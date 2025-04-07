@@ -46,13 +46,16 @@ const updateTodoItem = async <T extends object>(id: number, updateData: T) => {
   return response.json();
 };
 
-export const usePatchCompletedList = () => {
+export const usePatchCompletedList = (options?: {
+  onSuccess?: (data: any, variables: { id: number; completed: boolean }) => void;
+}) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, completed }: { id: number; completed: boolean }) => updateTodoItem(id, { completed }),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['todos'] });
+      options?.onSuccess?.(data, variables);
     },
   });
 };

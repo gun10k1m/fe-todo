@@ -1,16 +1,35 @@
-// 리스트 불러오기
 import { useQuery } from '@tanstack/react-query';
 
-const getTodos = async () => {
-  const response = await fetch('/api/todos');
-  const data = await response.json();
-  return data.todos;
+type GetTodosParams = {
+  all?: boolean;
+  limit?: number;
+  offset?: number;
+  completed?: string;
+  keyword?: string;
 };
 
-export const useGetAllList = () => {
+const getTodos = async (params: GetTodosParams = {}) => {
+  const query = new URLSearchParams();
+
+  if (params.all !== undefined) query.append('all', String(params.all));
+  if (params.limit !== undefined) query.append('limit', String(params.limit));
+  if (params.offset !== undefined) query.append('offset', String(params.offset));
+  if (params.completed !== undefined) query.append('completed', params.completed);
+  if (params.keyword) query.append('keyword', params.keyword);
+
+  const response = await fetch(`/api/todos?${query.toString()}`);
+  if (!response.ok) {
+    throw new Error('네트워크 오류가 발생했습니다.');
+  }
+  const data = await response.json();
+  console.log(data.todos);
+  return data.todos || [];
+};
+
+export const useGetAllList = (params?: GetTodosParams) => {
   return useQuery({
-    queryKey: ['todos'],
-    queryFn: () => getTodos(),
+    queryKey: ['todos', params],
+    queryFn: () => getTodos(params),
   });
 };
 
