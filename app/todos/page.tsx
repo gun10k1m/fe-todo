@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
+import React from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -14,7 +15,14 @@ import {
 } from '@/components/ui/pagination';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { DropdownMenuCheckboxItemProps } from '@radix-ui/react-dropdown-menu';
+import { FilterIcon, LoaderCircle, SearchIcon } from 'lucide-react';
 import { TodoProps } from '@/interfaces/todos.interface';
 import { useGetAllList, useGetInfiniteList } from '@/queries/todos/queries';
 import { usePatchCompletedList } from '@/queries/todos/mutation';
@@ -22,6 +30,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
 
 const LIMIT = 10;
+type Checked = DropdownMenuCheckboxItemProps['checked'];
 
 const getValidOffset = (param: string | null): number => {
   const parsed = parseInt(param || '', 10);
@@ -40,6 +49,8 @@ function TodoList() {
   const debouncedKeyword = useDebounce(keyword, 200);
   const [offset, setOffset] = useState(getValidOffset(offsetParam));
   const [isInfiniteMode, setIsInfiniteMode] = useState(false);
+  const [showCompleted, setShowCompleted] = React.useState<Checked>(completed);
+  const [showInfinite, setShowInfinite] = React.useState<Checked>(isInfiniteMode);
   const observer = useRef<IntersectionObserver | null>(null);
 
   const { data: paginatedData, isLoading: isPaginatedLoading } = useGetAllList({
@@ -100,33 +111,40 @@ function TodoList() {
     <div className="max-w-3xl mx-auto px-6 py-10">
       <h1 className="text-3xl font-bold text-center mb-8">📋 My Todo List</h1>
 
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-6 relative">
+        <div className="flex items-center gap-2 absolute left-3 top-3">
+          <SearchIcon className="h-4 w-4" />
+        </div>
         <Input
           placeholder="Search todos..."
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          className="flex-1"
+          className="flex-1 pl-10"
         />
-        <Button onClick={() => setOffset(0)}>검색</Button>
-      </div>
 
-      <div className="flex flex-wrap gap-4 mb-6">
-        <label className="flex items-center gap-2 text-sm">
-          <Checkbox id="completed" checked={completed} onCheckedChange={(checked) => setCompleted(!!checked)} />
-          완료된 항목만 보기
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <Checkbox
-            id="infinite"
-            checked={isInfiniteMode}
-            onCheckedChange={(checked) => {
-              setIsInfiniteMode(!!checked);
-              setCompleted(false);
-              setOffset(0);
-            }}
-          />
-          무한 스크롤 모드
-        </label>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <FilterIcon className="mr-2 h-4 w-4" />
+              Filter
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuCheckboxItem checked={completed} onCheckedChange={(checked) => setCompleted(!!checked)}>
+              완료된 목록
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={isInfiniteMode}
+              onCheckedChange={(checked) => {
+                setIsInfiniteMode(!!checked);
+                setCompleted(false);
+                setOffset(0);
+              }}
+            >
+              무한 스크롤
+            </DropdownMenuCheckboxItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {isPaginatedLoading && !isInfiniteMode ? (
