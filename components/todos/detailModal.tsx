@@ -2,16 +2,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useGetTodoDetail } from '@/queries/todos/queries';
-import { LoaderCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '../ui/skeleton';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 
 interface TodoDetailModalProps {
   id: number | null;
@@ -21,30 +17,55 @@ interface TodoDetailModalProps {
 
 export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps) {
   const { data, isLoading, error } = useGetTodoDetail(open ? id : null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (data) {
+      setTitle(data.title || '');
+      setDescription(data.description || '');
+    }
+  }, [data]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+        <form>
+          <DialogHeader>
+            <DialogTitle>Todo 수정</DialogTitle>
+          </DialogHeader>
+
           {isLoading ? (
             <>
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-              로딩 중...
+              <Skeleton className="h-10 w-full mt-4 mb-4" />
+              <Skeleton className="h-24 w-full mb-4" />
             </>
           ) : error ? (
-            <>
-              <DialogTitle>에러 발생</DialogTitle>
-              <DialogDescription>Todo 정보를 불러오는 데 실패했습니다.</DialogDescription>
-            </>
+            <div className="text-red-500 py-4">데이터를 불러오는 데 실패했습니다.</div>
           ) : (
-            <>
-              <DialogTitle>{data?.title}</DialogTitle>
-              <DialogDescription>{data?.description}</DialogDescription>
-            </>
+            <div className="py-4 space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="title" className="text-sm font-medium">
+                  제목
+                </label>
+                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Todo 제목" />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="description" className="text-sm font-medium">
+                  설명
+                </label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Todo 설명"
+                  rows={4}
+                />
+              </div>
+            </div>
           )}
-        </DialogHeader>
-        <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>닫기</Button>
-        </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

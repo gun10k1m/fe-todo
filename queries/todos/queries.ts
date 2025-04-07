@@ -7,6 +7,7 @@ const getTodos = async () => {
   return data.todos;
 };
 
+// 상세 조회
 export const useGetAllList = () => {
   return useQuery({
     queryKey: ['todos'],
