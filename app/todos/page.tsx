@@ -199,7 +199,7 @@ function TodoList() {
         <div className="flex justify-center items-center h-40 text-muted-foreground">불러올 데이터가 없습니다</div>
       ) : (
         <>
-          <div className="relative">
+          <div>
             <Accordion type="single" collapsible className="space-y-4">
               {(isInfiniteMode ? infiniteData?.pages.flat() : paginatedData)?.map(
                 (todo: TodoProps, index: number, array: TodoProps[]) => (
@@ -255,7 +255,7 @@ function TodoList() {
               )}
             </Accordion>
           </div>
-          <div className="absolute top-10 right-80">
+          <div className="fixed bottom-10 right-24">
             <Button
               onClick={(e) => {
                 e.stopPropagation();
