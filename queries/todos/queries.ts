@@ -1,6 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { useEffect } from 'react';
 
 type GetTodosParams = {
   all?: boolean;
@@ -30,20 +28,3 @@ export const useGetAllList = (params?: GetTodosParams) => {
     queryFn: () => getTodos(params),
   });
 };
-
-//디바운스
-// export const useDebounce = (value: string, delay: number) => {
-// const [debouncedValue, setDebouncedValue] = useState(value);
-//
-// useEffect(() => {
-// const handler = setTimeout(() => {
-// setDebouncedValue(value);
-// }, delay);
-//
-// return () => {
-// clearTimeout(handler);
-// };
-// }, [value, delay]);
-//
-// return debouncedValue;
-// };

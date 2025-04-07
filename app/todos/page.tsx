@@ -63,8 +63,14 @@ export default function GetAllList() {
   return (
     <div className="p-8">
       <h1 className="text-xl font-bold mb-4">📋 투두 리스트</h1>
-
       <div className="flex gap-4 m-5">
+        <Input
+          placeholder="키워드를 검색해주세요"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          className="w-60 flex-1"
+        />
+        <Button onClick={() => setOffset(0)}>검색</Button>
         <div className="flex items-center space-x-2">
           <Checkbox
             id="completed"
@@ -78,14 +84,12 @@ export default function GetAllList() {
             완료된 항목만 보기
           </label>
         </div>
-
-        <Input
-          placeholder="키워드를 검색해주세요"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          className="w-60 flex-1"
-        />
-        <Button onClick={() => setOffset(0)}>검색</Button>
+        <div className="flex items-center space-x-2">
+          <Checkbox id="infinite" />
+          <label htmlFor="infinite" className="text-sm">
+            무한 스크롤 모드
+          </label>
+        </div>
       </div>
 
       {isLoading ? (
@@ -104,7 +108,7 @@ export default function GetAllList() {
                   <div className="flex items-start space-x-4">
                     <Checkbox
                       checked={todo.completed}
-                      className="mt-5"
+                      className="mt-5 data-[state=checked]:bg-green-500"
                       onCheckedChange={() => patchCompleted({ id: todo.id, completed: !todo.completed })}
                     />
                     <div className="flex-1">
