@@ -13,6 +13,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,16 +31,17 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { DropdownMenuCheckboxItemProps } from '@radix-ui/react-dropdown-menu';
-import { FilterIcon, LoaderCircle, SearchIcon } from 'lucide-react';
+import { DropdownMenuItem } from '@radix-ui/react-dropdown-menu';
+import { FilterIcon, LoaderCircle, SearchIcon, Ellipsis } from 'lucide-react';
 import { TodoProps } from '@/interfaces/todos.interface';
 import { useGetAllList, useGetInfiniteList } from '@/queries/todos/queries';
-import { usePatchCompletedList } from '@/queries/todos/mutation';
+import { useDeleteTodo, usePatchCompletedList } from '@/queries/todos/mutation';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
+import { TodoDetailModal } from '@/components/todos/detailModal';
+import { toast } from '@/hooks/use-toast';
 
 const LIMIT = 10;
-type Checked = DropdownMenuCheckboxItemProps['checked'];
 
 const getValidOffset = (param: string | null): number => {
   const parsed = parseInt(param || '', 10);
@@ -49,8 +60,11 @@ function TodoList() {
   const debouncedKeyword = useDebounce(keyword, 200);
   const [offset, setOffset] = useState(getValidOffset(offsetParam));
   const [isInfiniteMode, setIsInfiniteMode] = useState(false);
-  const [showCompleted, setShowCompleted] = React.useState<Checked>(completed);
-  const [showInfinite, setShowInfinite] = React.useState<Checked>(isInfiniteMode);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
+  const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+
   const observer = useRef<IntersectionObserver | null>(null);
 
   const { data: paginatedData, isLoading: isPaginatedLoading } = useGetAllList({
@@ -80,7 +94,32 @@ function TodoList() {
   );
 
   const { mutate: patchCompleted } = usePatchCompletedList();
+  const { mutate: deleteTodo, isPending: isDeleting } = useDeleteTodo();
 
+  const handleDeleteClick = (id: number) => {
+    setTodoToDelete(id);
+    setIsAlertOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (todoToDelete !== null) {
+      deleteTodo(todoToDelete, {
+        onSuccess: () => {
+          toast({
+            title: '삭제 완료',
+            description: '할 일이 성공적으로 삭제되었습니다.',
+          });
+          setTodoToDelete(null);
+          setIsAlertOpen(false);
+        },
+      });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setTodoToDelete(null);
+    setIsAlertOpen(false);
+  };
   const lastTodoElementRefCallback = useCallback(
     (node: HTMLDivElement | null) => {
       if (isInfiniteLoading || isFetchingNextPage) return;
@@ -156,36 +195,62 @@ function TodoList() {
         <div className="flex justify-center items-center h-40 text-muted-foreground">불러올 데이터가 없습니다</div>
       ) : (
         <>
-          <Accordion type="single" collapsible className="space-y-4">
-            {(isInfiniteMode ? infiniteData?.pages.flat() : paginatedData)?.map(
-              (todo: TodoProps, index: number, array: TodoProps[]) => (
-                <AccordionItem
-                  value={todo.id.toString()}
-                  key={todo.id}
-                  ref={index === array.length - 1 ? lastTodoElementRefCallback : null}
-                  className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white"
-                >
-                  <div className="flex items-start gap-4">
-                    <Checkbox
-                      checked={todo.completed}
-                      onCheckedChange={() => patchCompleted({ id: todo.id, completed: !todo.completed })}
-                      className="mt-2 data-[state=checked]:bg-green-500"
-                    />
-                    <div className="flex-1">
-                      <AccordionTrigger className="flex justify-between items-center w-full">
-                        <h3 className={`font-semibold text-lg ${todo.completed ? 'line-through text-gray-400' : ''}`}>
-                          {todo.title}
-                        </h3>
-                      </AccordionTrigger>
-                      <AccordionContent className="text-sm text-muted-foreground mt-2">
-                        {todo.description || '설명이 없습니다.'}
-                      </AccordionContent>
-                    </div>
-                  </div>
-                </AccordionItem>
-              ),
-            )}
-          </Accordion>
+          <div>
+            <Accordion type="single" collapsible className="space-y-4">
+              {(isInfiniteMode ? infiniteData?.pages.flat() : paginatedData)?.map(
+                (todo: TodoProps, index: number, array: TodoProps[]) => (
+                  <>
+                    <AccordionItem
+                      value={todo.id.toString()}
+                      key={todo.id}
+                      ref={index === array.length - 1 ? lastTodoElementRefCallback : null}
+                      className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white"
+                    >
+                      <div className="flex items-start gap-4">
+                        <Checkbox
+                          checked={todo.completed}
+                          onCheckedChange={() => patchCompleted({ id: todo.id, completed: !todo.completed })}
+                          className="mt-6 data-[state=checked]:bg-green-500"
+                        />
+                        <div className="flex-1">
+                          <AccordionTrigger className="flex justify-between items-center w-full">
+                            <h3
+                              className={`font-semibold text-lg ${todo.completed ? 'line-through text-gray-400' : ''}`}
+                            >
+                              {todo.title}
+                            </h3>
+                          </AccordionTrigger>
+                          <AccordionContent className="text-sm text-muted-foreground mt-2">
+                            {todo.description || '설명이 없습니다.'}
+                          </AccordionContent>
+                        </div>
+                        <div className="mt-3">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost">
+                                <Ellipsis className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="flex flex-col justify-center items-center">
+                              <DropdownMenuItem
+                                onSelect={() => {
+                                  setDetailOpen(true);
+                                  setSelectedTodoId(todo.id);
+                                }}
+                              >
+                                수정
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleDeleteClick(todo.id)}>삭제</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </AccordionItem>
+                  </>
+                ),
+              )}
+            </Accordion>
+          </div>
 
           {isInfiniteMode && isFetchingNextPage && (
             <div className="flex justify-center items-center h-20 text-muted-foreground">
@@ -257,6 +322,37 @@ function TodoList() {
           </Pagination>
         </div>
       )}
+      <TodoDetailModal
+        id={selectedTodoId}
+        open={detailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open);
+          if (!open) {
+            setSelectedTodoId(null);
+          }
+        }}
+      />
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>할 일 삭제</AlertDialogTitle>
+            <AlertDialogDescription>정말로 이 할 일을 삭제하시겠습니까?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete}>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>
+              {isDeleting ? (
+                <>
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  삭제 중...
+                </>
+              ) : (
+                '삭제'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
