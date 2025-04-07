@@ -97,110 +97,90 @@ function TodoList() {
     (Array.isArray(paginatedData) && paginatedData.length === 0 && !isPaginatedLoading && !isInfiniteMode);
 
   return (
-    <div className="p-8">
-      <div className="flex justify-center items-center">
-        <h1 className="text-2xl font-bold mb-4">📋 투두 리스트</h1>
-      </div>
-      <div className="flex gap-4 m-5">
+    <div className="max-w-3xl mx-auto px-6 py-10">
+      <h1 className="text-3xl font-bold text-center mb-8">📋 My Todo List</h1>
+
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
         <Input
-          placeholder="키워드를 검색해주세요"
+          placeholder="Search todos..."
           value={keyword}
-          onChange={(e) => {
-            setKeyword(e.target.value);
-            if (isInfiniteMode) {
-              setOffset(0);
-            }
-          }}
-          className="w-60 flex-1"
+          onChange={(e) => setKeyword(e.target.value)}
+          className="flex-1"
         />
-        <Button
-          onClick={() => {
-            setOffset(0);
-          }}
-        >
-          검색
-        </Button>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="completed"
-            checked={completed}
-            onCheckedChange={(checked) => {
-              setCompleted(!!checked);
-            }}
-          />
-          <label htmlFor="completed" className="text-sm">
-            완료된 항목만 보기
-          </label>
-        </div>
-        <div className="flex items-center space-x-2">
+        <Button onClick={() => setOffset(0)}>검색</Button>
+      </div>
+
+      <div className="flex flex-wrap gap-4 mb-6">
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox id="completed" checked={completed} onCheckedChange={(checked) => setCompleted(!!checked)} />
+          완료된 항목만 보기
+        </label>
+        <label className="flex items-center gap-2 text-sm">
           <Checkbox
             id="infinite"
             checked={isInfiniteMode}
             onCheckedChange={(checked) => {
               setIsInfiniteMode(!!checked);
-              if (checked) {
-                setCompleted(false);
-                setOffset(0);
-              } else {
-                setOffset(0);
-              }
+              setCompleted(false);
+              setOffset(0);
             }}
           />
-          <label htmlFor="infinite" className="text-sm">
-            무한 스크롤 모드
-          </label>
-        </div>
+          무한 스크롤 모드
+        </label>
       </div>
 
       {isPaginatedLoading && !isInfiniteMode ? (
-        <div className="flex justify-center items-center h-40">
+        <div className="flex justify-center items-center h-40 text-muted-foreground">
           <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
           로딩 중...
         </div>
       ) : hasNoData && !isInfiniteMode ? (
-        <div className="flex justify-center items-center h-40 text-gray-500">불러올 데이터가 없습니다</div>
+        <div className="flex justify-center items-center h-40 text-muted-foreground">불러올 데이터가 없습니다</div>
       ) : (
         <>
-          <div className="m-5 px-4 border rounded-lg shadow-sm">
-            <Accordion type="single" collapsible className="w-full">
-              {(isInfiniteMode ? infiniteData?.pages.flat() : paginatedData)?.map(
-                (todo: TodoProps, index: number, array: TodoProps[]) => (
-                  <AccordionItem
-                    value={todo.id.toString()}
-                    key={todo.id}
-                    ref={index === array.length - 1 ? lastTodoElementRefCallback : null}
-                  >
-                    <div className="flex items-start space-x-4">
-                      <Checkbox
-                        checked={todo.completed}
-                        className="mt-5 data-[state=checked]:bg-green-500"
-                        onCheckedChange={() => patchCompleted({ id: todo.id, completed: !todo.completed })}
-                      />
-                      <div className="flex-1">
-                        <AccordionTrigger>
-                          <h3 className="font-medium">{todo.title}</h3>
-                        </AccordionTrigger>
-                        <AccordionContent className="text-sm text-muted-foreground">
-                          {todo.description}
-                        </AccordionContent>
-                      </div>
+          <Accordion type="single" collapsible className="space-y-4">
+            {(isInfiniteMode ? infiniteData?.pages.flat() : paginatedData)?.map(
+              (todo: TodoProps, index: number, array: TodoProps[]) => (
+                <AccordionItem
+                  value={todo.id.toString()}
+                  key={todo.id}
+                  ref={index === array.length - 1 ? lastTodoElementRefCallback : null}
+                  className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white"
+                >
+                  <div className="flex items-start gap-4">
+                    <Checkbox
+                      checked={todo.completed}
+                      onCheckedChange={() => patchCompleted({ id: todo.id, completed: !todo.completed })}
+                      className="mt-2 data-[state=checked]:bg-green-500"
+                    />
+                    <div className="flex-1">
+                      <AccordionTrigger className="flex justify-between items-center w-full">
+                        <h3 className={`font-semibold text-lg ${todo.completed ? 'line-through text-gray-400' : ''}`}>
+                          {todo.title}
+                        </h3>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-sm text-muted-foreground mt-2">
+                        {todo.description || '설명이 없습니다.'}
+                      </AccordionContent>
                     </div>
-                  </AccordionItem>
-                ),
-              )}
-            </Accordion>
-          </div>
+                  </div>
+                </AccordionItem>
+              ),
+            )}
+          </Accordion>
+
           {isInfiniteMode && isFetchingNextPage && (
-            <div className="flex justify-center items-center h-20">
+            <div className="flex justify-center items-center h-20 text-muted-foreground">
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
               추가 데이터 로딩 중...
             </div>
           )}
         </>
       )}
+
       {!isInfiniteMode && (
-        <div className="flex justify-center gap-4 mt-5">
-          <Pagination className="mt-4">
+        <div className="flex justify-center mt-8">
+          <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
@@ -221,7 +201,6 @@ function TodoList() {
                     e.preventDefault();
                     setOffset((offset / LIMIT) * LIMIT);
                   }}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {offset / LIMIT + 1}
                 </PaginationLink>
@@ -230,7 +209,7 @@ function TodoList() {
               <PaginationItem>
                 <PaginationLink
                   href="#"
-                  className={`hover:bg-primary/10 ${isLastPage || hasNoData ? 'pointer-events-none opacity-50' : ''}`}
+                  className={`${isLastPage || hasNoData ? 'pointer-events-none opacity-50' : ''}`}
                   onClick={(e) => {
                     e.preventDefault();
                     if (!isLastPage && !hasNoData) {
@@ -241,9 +220,11 @@ function TodoList() {
                   {offset / LIMIT + 2}
                 </PaginationLink>
               </PaginationItem>
+
               <PaginationItem>
                 <PaginationEllipsis />
               </PaginationItem>
+
               <PaginationItem>
                 <PaginationNext
                   href="#"
