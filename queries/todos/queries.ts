@@ -43,7 +43,7 @@ export const useGetInfiniteList = (params?: GetTodosParams) => {
           completed: params?.completed || '',
           keyword: params?.keyword || '',
           offset: pageParam.toString(),
-          limit: (pageParam === 0 ? 30 : params?.limit || 10).toString(),
+          limit: '10',
         }).toString()}`,
       );
 
@@ -55,10 +55,15 @@ export const useGetInfiniteList = (params?: GetTodosParams) => {
       return data.todos || [];
     },
     getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.length < (params?.limit || 10)) return undefined;
+      if (lastPage.length < 10) return undefined;
       return allPages.reduce((acc, page) => acc + page.length, 0);
     },
     initialPageParam: 0,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
+    retryDelay: 1000,
   });
 };
 

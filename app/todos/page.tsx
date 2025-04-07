@@ -67,7 +67,7 @@ function TodoList() {
 
   const lastTodoElementRefCallback = useCallback(
     (node: HTMLDivElement | null) => {
-      if (isInfiniteLoading) return;
+      if (isInfiniteLoading || isFetchingNextPage) return;
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
@@ -80,16 +80,6 @@ function TodoList() {
     },
     [isInfiniteLoading, hasNextPage, isFetchingNextPage, fetchNextPage],
   );
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (completed) params.set('completed', 'true');
-    if (debouncedKeyword) params.set('keyword', debouncedKeyword);
-    if (offset > 0) params.set('offset', offset.toString());
-    if (isInfiniteMode) params.set('all', 'true');
-
-    router.replace(`/todos?${params.toString()}`);
-  }, [completed, debouncedKeyword, offset, isInfiniteMode, router]);
 
   const isLastPage = !isInfiniteMode && offset + LIMIT > paginatedData?.totalCount;
   const isFirstPage = offset === 0;
@@ -165,17 +155,12 @@ function TodoList() {
         <>
           <div className="m-5 px-4 border rounded-lg shadow-sm">
             <Accordion type="single" collapsible className="w-full">
-              {(isInfiniteMode ? infiniteData?.pages.flatMap((page) => page) : paginatedData)?.map(
-                (todo: TodoProps, index: number) => (
+              {(isInfiniteMode ? infiniteData?.pages.flat() : paginatedData)?.map(
+                (todo: TodoProps, index: number, array: TodoProps[]) => (
                   <AccordionItem
                     value={todo.id.toString()}
                     key={todo.id}
-                    ref={
-                      index ===
-                      (isInfiniteMode ? infiniteData?.pages.flatMap((page) => page) : paginatedData).length - 1
-                        ? lastTodoElementRefCallback
-                        : null
-                    }
+                    ref={index === array.length - 1 ? lastTodoElementRefCallback : null}
                   >
                     <div className="flex items-start space-x-4">
                       <Checkbox
