@@ -11,6 +11,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/hooks/use-toast';
 import { TodoCreateFormValues } from '@/interfaces/todos.interface';
 import { useCreateTodo } from '@/queries/todos/mutation';
 import { useState } from 'react';
@@ -34,6 +35,12 @@ export function TodoCreateModal({ open, onOpenChange }: TodoCreateModalProps) {
   function onSubmit(values: TodoCreateFormValues) {
     createTodo(values, {
       onSuccess: () => {
+        toast({
+          variant: 'default',
+          className: 'bg-green-500 text-white',
+          title: '추가 완료',
+          description: '할 일이 성공적으로 추가되었습니다.',
+        });
         form.reset();
         onOpenChange(false);
       },

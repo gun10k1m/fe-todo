@@ -37,6 +37,8 @@ export default function DeletePage() {
       deleteTodo(todoToDelete, {
         onSuccess: () => {
           toast({
+            variant: 'default',
+            className: 'bg-green-500 text-white',
             title: '삭제 완료',
             description: '할 일이 성공적으로 삭제되었습니다.',
           });
