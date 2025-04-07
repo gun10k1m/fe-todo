@@ -13,6 +13,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname.startsWith('/todos')) {
+    if (userId) {
+      return NextResponse.next();
+    }
+
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
   return updateSession(request);
 }
 
