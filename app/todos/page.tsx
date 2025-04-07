@@ -17,8 +17,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const getValidOffset = (param: string | null): number => {
   const parsed = parseInt(param || '', 10);
@@ -36,41 +37,97 @@ export default function GetAllList() {
 
   const [completed, setCompleted] = useState(completedParam === 'true');
   const [keyword, setKeyword] = useState(keywordParam);
+  const debouncedKeyword = useDebounce(keyword, 200);
   const [offset, setOffset] = useState(getValidOffset(offsetParam));
+  const [isInfiniteMode, setIsInfiniteMode] = useState(false);
+  const [allTodos, setAllTodos] = useState<TodoProps[]>([]);
+  const [limit, setLimit] = useState(LIMIT);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const scrollPositionRef = useRef<number>(0);
 
   const { data, isLoading } = useGetAllList({
+    all: isInfiniteMode,
     completed: completed ? 'true' : 'false',
-    keyword: keyword,
+    keyword: debouncedKeyword,
     offset: offset,
-    limit: LIMIT,
+    limit: limit,
   });
 
   const { mutate: patchCompleted } = usePatchCompletedList();
 
   const isLastPage = offset + LIMIT > data?.totalCount;
   const isFirstPage = offset === 0;
-  const hasNoData = !data || data?.length === 0;
+  const hasNoData = !data || (Array.isArray(data) && data.length === 0 && !isLoading);
+
+  useEffect(() => {
+    if (isInfiniteMode) {
+      setAllTodos([]);
+      setOffset(0);
+    } else {
+      setAllTodos([]);
+      setOffset(0);
+      setLimit(LIMIT);
+    }
+  }, [isInfiniteMode]);
+
+  useEffect(() => {
+    if (data && isInfiniteMode) {
+      setAllTodos((prev) => [...prev, ...data]);
+      window.scrollTo(0, scrollPositionRef.current);
+    }
+  }, [data, isInfiniteMode]);
+
+  const lastTodoElementRefCallback = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !isLastPage && isInfiniteMode) {
+          scrollPositionRef.current = window.scrollY;
+          setOffset((prev) => prev + LIMIT);
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [isLoading, isLastPage, isInfiniteMode],
+  );
 
   useEffect(() => {
     const params = new URLSearchParams();
     params.set('completed', completed ? 'true' : 'false');
-    if (keyword) params.set('keyword', keyword);
+    if (debouncedKeyword) params.set('keyword', debouncedKeyword);
     if (offset > 0) params.set('offset', offset.toString());
+    if (isInfiniteMode) params.set('all', 'true');
 
     router.replace(`/todos?${params.toString()}`);
-  }, [completed, keyword, offset, router]);
+  }, [completed, debouncedKeyword, offset, isInfiniteMode, router]);
 
   return (
     <div className="p-8">
-      <h1 className="text-xl font-bold mb-4">📋 투두 리스트</h1>
+      <h1 className="text-xl font-bold mb-4 ">📋 투두 리스트</h1>
       <div className="flex gap-4 m-5">
         <Input
           placeholder="키워드를 검색해주세요"
           value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => {
+            setKeyword(e.target.value);
+            if (isInfiniteMode) {
+              setOffset(0);
+              setAllTodos([]);
+            }
+          }}
           className="w-60 flex-1"
         />
-        <Button onClick={() => setOffset(0)}>검색</Button>
+        <Button
+          onClick={() => {
+            setOffset(0);
+            setAllTodos([]);
+          }}
+        >
+          검색
+        </Button>
         <div className="flex items-center space-x-2">
           <Checkbox
             id="completed"
@@ -79,32 +136,48 @@ export default function GetAllList() {
               setCompleted(!!checked);
               setOffset(0);
             }}
+            disabled={isInfiniteMode}
           />
-          <label htmlFor="completed" className="text-sm">
+          <label htmlFor="completed" className={`text-sm ${isInfiniteMode ? 'text-gray-400' : ''}`}>
             완료된 항목만 보기
           </label>
         </div>
         <div className="flex items-center space-x-2">
-          <Checkbox id="infinite" />
+          <Checkbox
+            id="infinite"
+            checked={isInfiniteMode}
+            onCheckedChange={(checked) => {
+              setIsInfiniteMode(!!checked);
+              if (checked) {
+                setCompleted(false);
+                setOffset(0);
+                setAllTodos([]);
+              }
+            }}
+          />
           <label htmlFor="infinite" className="text-sm">
             무한 스크롤 모드
           </label>
         </div>
       </div>
 
-      {isLoading ? (
+      {isLoading && offset === 0 ? (
         <div className="flex justify-center items-center h-40">
           <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
           로딩 중...
         </div>
-      ) : hasNoData ? (
+      ) : hasNoData && !isLoading ? (
         <div className="flex justify-center items-center h-40 text-gray-500">불러올 데이터가 없습니다</div>
       ) : (
         <>
           <div className="m-5 px-4 border rounded-lg shadow-sm">
             <Accordion type="single" collapsible className="w-full">
-              {data?.map((todo: TodoProps) => (
-                <AccordionItem value={todo.id.toString()} key={todo.id}>
+              {(isInfiniteMode ? allTodos : data)?.map((todo: TodoProps, index: number) => (
+                <AccordionItem
+                  value={todo.id.toString()}
+                  key={todo.id}
+                  ref={index === (isInfiniteMode ? allTodos : data).length - 1 ? lastTodoElementRefCallback : null}
+                >
                   <div className="flex items-start space-x-4">
                     <Checkbox
                       checked={todo.completed}
@@ -122,9 +195,15 @@ export default function GetAllList() {
               ))}
             </Accordion>
           </div>
+          {isLoading && offset > 0 && (
+            <div className="flex justify-center items-center h-20">
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              추가 데이터 로딩 중...
+            </div>
+          )}
         </>
       )}
-      <>
+      {!isInfiniteMode && (
         <div className="flex justify-center gap-4 mt-5">
           <Pagination className="mt-4">
             <PaginationContent>
@@ -140,13 +219,13 @@ export default function GetAllList() {
               </PaginationItem>
 
               <PaginationItem>
-                <PaginationLink href="#" isActive>
+                <PaginationLink href="#" isActive className="bg-primary text-primary-foreground hover:bg-primary/90">
                   {offset / LIMIT + 1}
                 </PaginationLink>
               </PaginationItem>
 
               <PaginationItem>
-                <PaginationLink href="#" isActive>
+                <PaginationLink href="#" className="hover:bg-primary/10">
                   {offset / LIMIT + 2}
                 </PaginationLink>
               </PaginationItem>
@@ -166,7 +245,7 @@ export default function GetAllList() {
             </PaginationContent>
           </Pagination>
         </div>
-      </>
+      )}
     </div>
   );
 }
