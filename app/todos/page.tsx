@@ -214,13 +214,30 @@ function TodoList() {
               </PaginationItem>
 
               <PaginationItem>
-                <PaginationLink href="#" isActive className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <PaginationLink
+                  href="#"
+                  isActive
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setOffset((offset / LIMIT) * LIMIT);
+                  }}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
                   {offset / LIMIT + 1}
                 </PaginationLink>
               </PaginationItem>
 
               <PaginationItem>
-                <PaginationLink href="#" className="hover:bg-primary/10">
+                <PaginationLink
+                  href="#"
+                  className={`hover:bg-primary/10 ${isLastPage || hasNoData ? 'pointer-events-none opacity-50' : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!isLastPage && !hasNoData) {
+                      setOffset((offset / LIMIT + 1) * LIMIT);
+                    }
+                  }}
+                >
                   {offset / LIMIT + 2}
                 </PaginationLink>
               </PaginationItem>
