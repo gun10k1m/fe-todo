@@ -32,13 +32,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DropdownMenuItem } from '@radix-ui/react-dropdown-menu';
-import { FilterIcon, LoaderCircle, SearchIcon, Ellipsis } from 'lucide-react';
+import { FilterIcon, LoaderCircle, SearchIcon, Ellipsis, Plus } from 'lucide-react';
 import { TodoProps } from '@/interfaces/todos.interface';
 import { useGetAllList, useGetInfiniteList } from '@/queries/todos/queries';
 import { useDeleteTodo, usePatchCompletedList } from '@/queries/todos/mutation';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
 import { TodoDetailModal } from '@/components/todos/detailModal';
+import { TodoCreateModal } from '@/components/todos/createModal';
 import { toast } from '@/hooks/use-toast';
 
 const LIMIT = 10;
@@ -64,6 +65,7 @@ function TodoList() {
   const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
   const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -100,7 +102,9 @@ function TodoList() {
     setTodoToDelete(id);
     setIsAlertOpen(true);
   };
-
+  const handleCreateClick = () => {
+    setCreateModalOpen(true);
+  };
   const handleConfirmDelete = () => {
     if (todoToDelete !== null) {
       deleteTodo(todoToDelete, {
@@ -195,7 +199,7 @@ function TodoList() {
         <div className="flex justify-center items-center h-40 text-muted-foreground">불러올 데이터가 없습니다</div>
       ) : (
         <>
-          <div>
+          <div className="relative">
             <Accordion type="single" collapsible className="space-y-4">
               {(isInfiniteMode ? infiniteData?.pages.flat() : paginatedData)?.map(
                 (todo: TodoProps, index: number, array: TodoProps[]) => (
@@ -250,6 +254,24 @@ function TodoList() {
                 ),
               )}
             </Accordion>
+          </div>
+          <div className="absolute top-10 right-80">
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCreateClick();
+              }}
+              variant="outline"
+              size="icon"
+            >
+              <Plus />
+            </Button>
+            <TodoCreateModal
+              open={createModalOpen}
+              onOpenChange={(open) => {
+                setCreateModalOpen(open);
+              }}
+            />
           </div>
 
           {isInfiniteMode && isFetchingNextPage && (
