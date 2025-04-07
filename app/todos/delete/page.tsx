@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, LoaderCircle } from 'lucide-react';
 import { TodoProps } from '@/interfaces/todos.interface';
 import { useGetAllList } from '@/queries/todos/queries';
-import { useDeleteList, usePatchCompletedList } from '@/queries/todos/mutation';
+import { useDeleteTodo, usePatchCompletedList } from '@/queries/todos/mutation';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -23,7 +23,7 @@ import {
 export default function DeletePage() {
   const { data, isLoading, error } = useGetAllList();
   const { mutate: patchCompleted } = usePatchCompletedList();
-  const { mutate: deleteTodo, isPending: isDeleting } = useDeleteList();
+  const { mutate: deleteTodo, isPending: isDeleting } = useDeleteTodo();
   const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
