@@ -13,41 +13,34 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useMutation } from '@tanstack/react-query';
+import { TodoCreateFormValues } from '@/interfaces/todos.interface';
+import { useCreateTodo } from '@/queries/todos/mutation';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-interface todoCreateForm {
-  title: string;
-  description?: string;
-}
-
 export default function TestCreate() {
-  const form = useForm<todoCreateForm>({
+  const [open, setOpen] = useState(false);
+
+  const form = useForm<TodoCreateFormValues>({
     defaultValues: {
       title: '',
       description: '',
     },
   });
 
-  const createTodoMutation = useMutation({
-    mutationKey: ['createTodo'],
-    mutationFn: async (values: todoCreateForm) => {
-      const response = await fetch('/api/todos', {
-        method: 'POST',
-        body: JSON.stringify(values),
-      });
+  const { mutate: createTodo, isPending } = useCreateTodo();
 
-      if (response.status >= 400) {
-        throw new Error();
-      }
-    },
-  });
-  function onSubmit(values: todoCreateForm) {
-    createTodoMutation.mutate(values);
+  function onSubmit(values: TodoCreateFormValues) {
+    createTodo(values, {
+      onSuccess: () => {
+        form.reset();
+        setOpen(false);
+      },
+    });
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Todo 추가</Button>
       </DialogTrigger>
@@ -90,7 +83,9 @@ export default function TestCreate() {
               )}
             />
             <DialogFooter>
-              <Button type="submit">추가</Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? '추가 중...' : '추가'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
