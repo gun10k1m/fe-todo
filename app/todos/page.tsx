@@ -41,38 +41,47 @@ export default function GetAllList() {
   const [offset, setOffset] = useState(getValidOffset(offsetParam));
   const [isInfiniteMode, setIsInfiniteMode] = useState(false);
   const [allTodos, setAllTodos] = useState<TodoProps[]>([]);
-  const [limit, setLimit] = useState(LIMIT);
   const observer = useRef<IntersectionObserver | null>(null);
   const scrollPositionRef = useRef<number>(0);
 
   const { data, isLoading } = useGetAllList({
     all: isInfiniteMode,
-    completed: completed ? 'true' : 'false',
+    completed: completed ? 'true' : undefined,
     keyword: debouncedKeyword,
     offset: offset,
-    limit: limit,
+    limit: LIMIT,
   });
 
-  const { mutate: patchCompleted } = usePatchCompletedList();
+  const { mutate: patchCompleted } = usePatchCompletedList({
+    onSuccess: (_, variables) => {
+      if (isInfiniteMode) {
+        setAllTodos((prev) =>
+          prev.map((todo) => (todo.id === variables.id ? { ...todo, completed: variables.completed } : todo)),
+        );
+      }
+    },
+  });
 
-  const isLastPage = offset + LIMIT > data?.totalCount;
+  const isLastPage = !isInfiniteMode && offset + LIMIT > data?.totalCount;
   const isFirstPage = offset === 0;
-  const hasNoData = !data || (Array.isArray(data) && data.length === 0 && !isLoading);
+  const hasNoData = !data || (Array.isArray(data) && data.length === 0 && !isLoading && !isInfiniteMode);
+  const shouldLoadMore = isInfiniteMode && data?.length === LIMIT;
 
   useEffect(() => {
     if (isInfiniteMode) {
       setAllTodos([]);
       setOffset(0);
-    } else {
-      setAllTodos([]);
-      setOffset(0);
-      setLimit(LIMIT);
     }
-  }, [isInfiniteMode]);
+  }, [isInfiniteMode, completed, debouncedKeyword]);
 
   useEffect(() => {
     if (data && isInfiniteMode) {
-      setAllTodos((prev) => [...prev, ...data]);
+      setAllTodos((prev) => {
+        const newTodos = data.filter(
+          (newTodo: TodoProps) => !prev.some((existingTodo: TodoProps) => existingTodo.id === newTodo.id),
+        );
+        return [...prev, ...newTodos];
+      });
       window.scrollTo(0, scrollPositionRef.current);
     }
   }, [data, isInfiniteMode]);
@@ -83,7 +92,7 @@ export default function GetAllList() {
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && !isLastPage && isInfiniteMode) {
+        if (entries[0].isIntersecting && shouldLoadMore) {
           scrollPositionRef.current = window.scrollY;
           setOffset((prev) => prev + LIMIT);
         }
@@ -91,12 +100,12 @@ export default function GetAllList() {
 
       if (node) observer.current.observe(node);
     },
-    [isLoading, isLastPage, isInfiniteMode],
+    [isLoading, shouldLoadMore],
   );
 
   useEffect(() => {
     const params = new URLSearchParams();
-    params.set('completed', completed ? 'true' : 'false');
+    if (completed) params.set('completed', 'true');
     if (debouncedKeyword) params.set('keyword', debouncedKeyword);
     if (offset > 0) params.set('offset', offset.toString());
     if (isInfiniteMode) params.set('all', 'true');
@@ -135,10 +144,10 @@ export default function GetAllList() {
             onCheckedChange={(checked) => {
               setCompleted(!!checked);
               setOffset(0);
+              setAllTodos([]);
             }}
-            disabled={isInfiniteMode}
           />
-          <label htmlFor="completed" className={`text-sm ${isInfiniteMode ? 'text-gray-400' : ''}`}>
+          <label htmlFor="completed" className="text-sm">
             완료된 항목만 보기
           </label>
         </div>
@@ -150,6 +159,9 @@ export default function GetAllList() {
               setIsInfiniteMode(!!checked);
               if (checked) {
                 setCompleted(false);
+                setOffset(0);
+                setAllTodos([]);
+              } else {
                 setOffset(0);
                 setAllTodos([]);
               }
@@ -166,7 +178,7 @@ export default function GetAllList() {
           <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
           로딩 중...
         </div>
-      ) : hasNoData && !isLoading ? (
+      ) : hasNoData && !isInfiniteMode ? (
         <div className="flex justify-center items-center h-40 text-gray-500">불러올 데이터가 없습니다</div>
       ) : (
         <>
