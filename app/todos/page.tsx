@@ -44,6 +44,11 @@ export default function GetAllList() {
   const observer = useRef<IntersectionObserver | null>(null);
   const scrollPositionRef = useRef<number>(0);
 
+  useEffect(() => {
+    setOffset(0);
+    setAllTodos([]);
+  }, []);
+
   const { data, isLoading } = useGetAllList({
     all: isInfiniteMode,
     completed: completed ? 'true' : undefined,
