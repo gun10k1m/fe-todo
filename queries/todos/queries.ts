@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 
 type GetTodosParams = {
   all?: boolean;
@@ -33,6 +33,35 @@ export const useGetAllList = (params?: GetTodosParams) => {
   });
 };
 
+export const useGetInfiniteList = (params?: GetTodosParams) => {
+  return useInfiniteQuery({
+    queryKey: ['todos', 'infinite', params],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await fetch(
+        `/api/todos?${new URLSearchParams({
+          all: 'true',
+          completed: params?.completed || '',
+          keyword: params?.keyword || '',
+          offset: pageParam.toString(),
+          limit: (pageParam === 0 ? 30 : params?.limit || 10).toString(),
+        }).toString()}`,
+      );
+
+      if (!response.ok) {
+        throw new Error('네트워크 오류가 발생했습니다.');
+      }
+
+      const data = await response.json();
+      return data.todos || [];
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < (params?.limit || 10)) return undefined;
+      return allPages.reduce((acc, page) => acc + page.length, 0);
+    },
+    initialPageParam: 0,
+  });
+};
+
 // 상세 조회
 const getTodoDetail = async (id: number | null) => {
   if (id === null) {
@@ -46,9 +75,6 @@ const getTodoDetail = async (id: number | null) => {
   }
 
   const data = await response.json();
-
-  // 콘솔값 출력
-  console.log(data.todo);
 
   return data.todo || null;
 };

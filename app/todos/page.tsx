@@ -1,14 +1,8 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LoaderCircle } from 'lucide-react';
-import { TodoProps } from '@/interfaces/todos.interface';
-import { useGetAllList } from '@/queries/todos/queries';
-import { usePatchCompletedList } from '@/queries/todos/mutation';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import {
   Pagination,
   PaginationContent,
@@ -18,16 +12,21 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { LoaderCircle } from 'lucide-react';
+import { TodoProps } from '@/interfaces/todos.interface';
+import { useGetAllList, useGetInfiniteList } from '@/queries/todos/queries';
+import { usePatchCompletedList } from '@/queries/todos/mutation';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
+
+const LIMIT = 10;
 
 const getValidOffset = (param: string | null): number => {
   const parsed = parseInt(param || '', 10);
   return isNaN(parsed) || parsed < 0 ? 0 : parsed;
 };
-
-const LIMIT = 10;
 
 function TodoList() {
   const searchParams = useSearchParams();
@@ -41,56 +40,46 @@ function TodoList() {
   const debouncedKeyword = useDebounce(keyword, 200);
   const [offset, setOffset] = useState(getValidOffset(offsetParam));
   const [isInfiniteMode, setIsInfiniteMode] = useState(false);
-  const [allTodos, setAllTodos] = useState<TodoProps[]>([]);
   const observer = useRef<IntersectionObserver | null>(null);
-  const scrollPositionRef = useRef<number>(0);
 
-  useEffect(() => {
-    setOffset(0);
-    setAllTodos([]);
-  }, []);
-
-  const { data, isLoading } = useGetAllList({
-    all: isInfiniteMode,
+  const { data: paginatedData, isLoading: isPaginatedLoading } = useGetAllList({
+    all: false,
     completed: completed ? 'true' : undefined,
     keyword: debouncedKeyword,
     offset: offset,
     limit: LIMIT,
   });
 
-  const { mutate: patchCompleted } = usePatchCompletedList({
-    onSuccess: (_, variables) => {
-      if (isInfiniteMode) {
-        setAllTodos((prev) =>
-          prev.map((todo) => (todo.id === variables.id ? { ...todo, completed: variables.completed } : todo)),
-        );
-      }
-    },
+  const {
+    data: infiniteData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isInfiniteLoading,
+  } = useGetInfiniteList({
+    all: true,
+    completed: completed ? 'true' : undefined,
+    keyword: debouncedKeyword,
+    limit: LIMIT,
   });
 
-  const isLastPage = !isInfiniteMode && offset + LIMIT > data?.totalCount;
-  const isFirstPage = offset === 0;
-  const hasNoData = !data || (Array.isArray(data) && data.length === 0 && !isLoading && !isInfiniteMode);
-  const shouldLoadMore = isInfiniteMode && data?.length === LIMIT;
+  const { mutate: patchCompleted } = usePatchCompletedList();
 
-  useEffect(() => {
-    if (isInfiniteMode) {
-      setAllTodos([]);
-      setOffset(0);
-    }
-  }, [isInfiniteMode, completed, debouncedKeyword]);
+  const lastTodoElementRefCallback = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isInfiniteLoading) return;
+      if (observer.current) observer.current.disconnect();
 
-  useEffect(() => {
-    if (data && isInfiniteMode) {
-      setAllTodos((prev) => {
-        const newTodos = data.filter(
-          (newTodo: TodoProps) => !prev.some((existingTodo: TodoProps) => existingTodo.id === newTodo.id),
-        );
-        return [...prev, ...newTodos];
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
       });
-      window.scrollTo(0, scrollPositionRef.current);
-    }
-  }, [data, isInfiniteMode]);
+
+      if (node) observer.current.observe(node);
+    },
+    [isInfiniteLoading, hasNextPage, isFetchingNextPage, fetchNextPage],
+  );
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -102,26 +91,17 @@ function TodoList() {
     router.replace(`/todos?${params.toString()}`);
   }, [completed, debouncedKeyword, offset, isInfiniteMode, router]);
 
-  const lastTodoElementRefCallback = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isLoading) return;
-      if (observer.current) observer.current.disconnect();
-
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && shouldLoadMore) {
-          scrollPositionRef.current = window.scrollY;
-          setOffset((prev) => prev + LIMIT);
-        }
-      });
-
-      if (node) observer.current.observe(node);
-    },
-    [isLoading, shouldLoadMore],
-  );
+  const isLastPage = !isInfiniteMode && offset + LIMIT > paginatedData?.totalCount;
+  const isFirstPage = offset === 0;
+  const hasNoData =
+    !paginatedData ||
+    (Array.isArray(paginatedData) && paginatedData.length === 0 && !isPaginatedLoading && !isInfiniteMode);
 
   return (
     <div className="p-8">
-      <h1 className="text-xl font-bold mb-4 ">📋 투두 리스트</h1>
+      <div className="flex justify-center items-center">
+        <h1 className="text-2xl font-bold mb-4">📋 투두 리스트</h1>
+      </div>
       <div className="flex gap-4 m-5">
         <Input
           placeholder="키워드를 검색해주세요"
@@ -130,7 +110,6 @@ function TodoList() {
             setKeyword(e.target.value);
             if (isInfiniteMode) {
               setOffset(0);
-              setAllTodos([]);
             }
           }}
           className="w-60 flex-1"
@@ -138,7 +117,6 @@ function TodoList() {
         <Button
           onClick={() => {
             setOffset(0);
-            setAllTodos([]);
           }}
         >
           검색
@@ -150,7 +128,6 @@ function TodoList() {
             onCheckedChange={(checked) => {
               setCompleted(!!checked);
               setOffset(0);
-              setAllTodos([]);
             }}
           />
           <label htmlFor="completed" className="text-sm">
@@ -166,10 +143,8 @@ function TodoList() {
               if (checked) {
                 setCompleted(false);
                 setOffset(0);
-                setAllTodos([]);
               } else {
                 setOffset(0);
-                setAllTodos([]);
               }
             }}
           />
@@ -179,7 +154,7 @@ function TodoList() {
         </div>
       </div>
 
-      {isLoading && offset === 0 ? (
+      {isPaginatedLoading && !isInfiniteMode ? (
         <div className="flex justify-center items-center h-40">
           <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
           로딩 중...
@@ -190,30 +165,39 @@ function TodoList() {
         <>
           <div className="m-5 px-4 border rounded-lg shadow-sm">
             <Accordion type="single" collapsible className="w-full">
-              {(isInfiniteMode ? allTodos : data)?.map((todo: TodoProps, index: number) => (
-                <AccordionItem
-                  value={todo.id.toString()}
-                  key={todo.id}
-                  ref={index === (isInfiniteMode ? allTodos : data).length - 1 ? lastTodoElementRefCallback : null}
-                >
-                  <div className="flex items-start space-x-4">
-                    <Checkbox
-                      checked={todo.completed}
-                      className="mt-5 data-[state=checked]:bg-green-500"
-                      onCheckedChange={() => patchCompleted({ id: todo.id, completed: !todo.completed })}
-                    />
-                    <div className="flex-1">
-                      <AccordionTrigger>
-                        <h3 className="font-medium">{todo.title}</h3>
-                      </AccordionTrigger>
-                      <AccordionContent className="text-sm text-muted-foreground">{todo.description}</AccordionContent>
+              {(isInfiniteMode ? infiniteData?.pages.flatMap((page) => page) : paginatedData)?.map(
+                (todo: TodoProps, index: number) => (
+                  <AccordionItem
+                    value={todo.id.toString()}
+                    key={todo.id}
+                    ref={
+                      index ===
+                      (isInfiniteMode ? infiniteData?.pages.flatMap((page) => page) : paginatedData).length - 1
+                        ? lastTodoElementRefCallback
+                        : null
+                    }
+                  >
+                    <div className="flex items-start space-x-4">
+                      <Checkbox
+                        checked={todo.completed}
+                        className="mt-5 data-[state=checked]:bg-green-500"
+                        onCheckedChange={() => patchCompleted({ id: todo.id, completed: !todo.completed })}
+                      />
+                      <div className="flex-1">
+                        <AccordionTrigger>
+                          <h3 className="font-medium">{todo.title}</h3>
+                        </AccordionTrigger>
+                        <AccordionContent className="text-sm text-muted-foreground">
+                          {todo.description}
+                        </AccordionContent>
+                      </div>
                     </div>
-                  </div>
-                </AccordionItem>
-              ))}
+                  </AccordionItem>
+                ),
+              )}
             </Accordion>
           </div>
-          {isLoading && offset > 0 && (
+          {isInfiniteMode && isFetchingNextPage && (
             <div className="flex justify-center items-center h-20">
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
               추가 데이터 로딩 중...
