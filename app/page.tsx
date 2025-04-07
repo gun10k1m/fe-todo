@@ -17,9 +17,6 @@ export default function Home() {
         <a href="/auth/login">
           <Button variant="outline">Login</Button>
         </a>
-        <a href="/todos/create">
-          <Button variant="outline">Create todo</Button>
-        </a>
       </div>
     </div>
   );

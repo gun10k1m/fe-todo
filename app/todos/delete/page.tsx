@@ -6,32 +6,50 @@ import { Button } from '@/components/ui/button';
 import { Trash2, LoaderCircle } from 'lucide-react';
 import { TodoProps } from '@/interfaces/todos.interface';
 import { useGetAllList } from '@/queries/todos/queries';
-import { useDeleteList, usePatchCompletedList } from '@/queries/todos/mutation';
+import { useDeleteTodo, usePatchCompletedList } from '@/queries/todos/mutation';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function DeletePage() {
   const { data, isLoading, error } = useGetAllList();
   const { mutate: patchCompleted } = usePatchCompletedList();
-  const { mutate: deleteTodo, isPending: isDeleting } = useDeleteList();
+  const { mutate: deleteTodo, isPending: isDeleting } = useDeleteTodo();
   const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
-  const handleDelete = (id: number) => {
+  const handleDeleteClick = (id: number) => {
     setTodoToDelete(id);
-    // 확인 후 삭제 실행
-    if (confirm('정말로 이 할 일을 삭제하시겠습니까?')) {
-      deleteTodo(id, {
+    setIsAlertOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (todoToDelete !== null) {
+      deleteTodo(todoToDelete, {
         onSuccess: () => {
           toast({
             title: '삭제 완료',
             description: '할 일이 성공적으로 삭제되었습니다.',
           });
           setTodoToDelete(null);
+          setIsAlertOpen(false);
         },
       });
-    } else {
-      setTodoToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setTodoToDelete(null);
+    setIsAlertOpen(false);
   };
 
   return (
@@ -66,7 +84,7 @@ export default function DeletePage() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleDelete(todo.id)}
+                      onClick={() => handleDeleteClick(todo.id)}
                       disabled={isDeleting && todoToDelete === todo.id}
                     >
                       {isDeleting && todoToDelete === todo.id ? (
@@ -80,6 +98,29 @@ export default function DeletePage() {
               ))}
             </Accordion>
           </div>
+
+          {/* AlertDialog 컴포넌트 */}
+          <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>할 일 삭제</AlertDialogTitle>
+                <AlertDialogDescription>정말로 이 할 일을 삭제하시겠습니까?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={handleCancelDelete}>취소</AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmDelete}>
+                  {isDeleting ? (
+                    <>
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      삭제 중...
+                    </>
+                  ) : (
+                    '삭제'
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       )}
     </div>

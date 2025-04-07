@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { TodoDetailModal } from '@/components/todos/detailModal';
 import { useState } from 'react';
 
-export default function GetDetailTodo() {
+export default function DetailPage() {
   const { data, isLoading, error } = useGetAllList();
   const { mutate: patchCompleted } = usePatchCompletedList();
 

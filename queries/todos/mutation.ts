@@ -1,8 +1,8 @@
 import { TodoCreateFormValues } from '@/interfaces/todos.interface';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-// 리스트 생성
-const createTodo = async (values: TodoCreateFormValues) => {
+// Todo Create
+const createTodoItem = async (values: TodoCreateFormValues) => {
   const response = await fetch('/api/todos', {
     method: 'POST',
     body: JSON.stringify(values),
@@ -19,7 +19,7 @@ export const useCreateTodo = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createTodo,
+    mutationFn: createTodoItem,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] });
     },
@@ -74,8 +74,8 @@ export const useUpdateTodo = () => {
   });
 };
 
-// todo Delete
-const deleteList = async (id: number) => {
+// Todo Delete
+const deleteTodoItem = async (id: number) => {
   const response = await fetch(`/api/todos/${id}`, {
     method: 'DELETE',
   });
@@ -87,11 +87,11 @@ const deleteList = async (id: number) => {
   return response.json();
 };
 
-export const useDeleteList = () => {
+export const useDeleteTodo = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => deleteList(id),
+    mutationFn: (id: number) => deleteTodoItem(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] });
     },
