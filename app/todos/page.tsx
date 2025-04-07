@@ -56,12 +56,17 @@ function TodoList() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isInfiniteLoading,
-  } = useGetInfiniteList({
-    all: true,
-    completed: completed ? 'true' : undefined,
-    keyword: debouncedKeyword,
-    limit: LIMIT,
-  });
+  } = useGetInfiniteList(
+    {
+      all: true,
+      completed: completed ? 'true' : undefined,
+      keyword: debouncedKeyword,
+      limit: LIMIT,
+    },
+    {
+      enabled: isInfiniteMode,
+    },
+  );
 
   const { mutate: patchCompleted } = usePatchCompletedList();
 
@@ -80,6 +85,10 @@ function TodoList() {
     },
     [isInfiniteLoading, hasNextPage, isFetchingNextPage, fetchNextPage],
   );
+
+  useEffect(() => {
+    setOffset(0);
+  }, [completed, debouncedKeyword]);
 
   const isLastPage = !isInfiniteMode && offset + LIMIT > paginatedData?.totalCount;
   const isFirstPage = offset === 0;
@@ -117,7 +126,6 @@ function TodoList() {
             checked={completed}
             onCheckedChange={(checked) => {
               setCompleted(!!checked);
-              setOffset(0);
             }}
           />
           <label htmlFor="completed" className="text-sm">

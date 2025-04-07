@@ -33,7 +33,7 @@ export const useGetAllList = (params?: GetTodosParams) => {
   });
 };
 
-export const useGetInfiniteList = (params?: GetTodosParams) => {
+export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?: boolean }) => {
   return useInfiniteQuery({
     queryKey: ['todos', 'infinite', params],
     queryFn: async ({ pageParam = 0 }) => {
@@ -64,6 +64,7 @@ export const useGetInfiniteList = (params?: GetTodosParams) => {
     refetchOnMount: false,
     retry: 1,
     retryDelay: 1000,
+    enabled: options?.enabled ?? true,
   });
 };
 
