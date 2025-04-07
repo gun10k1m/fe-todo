@@ -7,7 +7,6 @@ const getTodos = async () => {
   return data.todos;
 };
 
-// 상세 조회
 export const useGetAllList = () => {
   return useQuery({
     queryKey: ['todos'],
@@ -15,7 +14,8 @@ export const useGetAllList = () => {
   });
 };
 
-export const getTodoDetail = async (id: number | null) => {
+// 상세 조회
+const getTodoDetail = async (id: number | null) => {
   if (id === null) {
     return null;
   }
@@ -36,7 +36,7 @@ export const getTodoDetail = async (id: number | null) => {
 
 export const useGetTodoDetail = (id: number | null) => {
   return useQuery({
-    queryKey: ['todos', 'detail', id],
+    queryKey: ['todo', id],
     queryFn: () => getTodoDetail(id),
     enabled: id !== null && id !== undefined,
   });

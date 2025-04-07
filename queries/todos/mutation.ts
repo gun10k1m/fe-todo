@@ -23,3 +23,33 @@ export const usePatchCompletedList = () => {
     },
   });
 };
+
+const updateTodo = async (id: number, title: string, description: string) => {
+  const response = await fetch(`/api/todos/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ title, description }),
+  });
+
+  if (!response.ok) {
+    throw new Error();
+  }
+
+  return response.json();
+};
+
+export const useUpdateTodo = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, title, description }: { id: number; title: string; description: string }) =>
+      updateTodo(id, title, description),
+    onSuccess: (_, variables) => {
+      const { id } = variables;
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: ['todo', id] });
+    },
+  });
+};

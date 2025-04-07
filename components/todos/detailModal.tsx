@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
+import { useUpdateTodo } from '@/queries/todos/mutation';
 
 interface TodoDetailModalProps {
   id: number | null;
@@ -19,6 +20,9 @@ export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps
   const { data, isLoading, error } = useGetTodoDetail(open ? id : null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const { mutate, isPending } = useUpdateTodo();
+
+  const hasError = Boolean(error);
 
   useEffect(() => {
     if (data) {
@@ -27,10 +31,24 @@ export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps
     }
   }, [data]);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (id) {
+      mutate(
+        { id, title, description },
+        {
+          onSuccess: () => {
+            onOpenChange(false);
+          },
+        },
+      );
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <form>
+        <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Todo 수정</DialogTitle>
           </DialogHeader>
@@ -65,6 +83,15 @@ export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps
               </div>
             </div>
           )}
+
+          <DialogFooter className="gap-2 mt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+              취소
+            </Button>
+            <Button type="submit" disabled={isLoading || hasError || isPending}>
+              {isPending ? '저장 중...' : '저장'}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
