@@ -153,7 +153,7 @@ function TodoList() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 relative">
-      <div className="flex items-center gap-2 absolute top-10 left-6">
+      <div className="flex items-center gap-2 absolute top-10 left-6 z-50">
         <Link href="/" className="text-muted-foreground">
           <Home />
         </Link>
