@@ -34,7 +34,7 @@ import {
 import { DropdownMenuItem } from '@radix-ui/react-dropdown-menu';
 import { FilterIcon, LoaderCircle, SearchIcon, Ellipsis, Plus } from 'lucide-react';
 import { TodoProps } from '@/interfaces/todos.interface';
-import { useGetAllList, useGetInfiniteList } from '@/queries/todos/queries';
+import { useGetList, useGetInfiniteList } from '@/queries/todos/queries';
 import { useDeleteTodo, usePatchCompletedList } from '@/queries/todos/mutation';
 import { useSearchParams } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -68,7 +68,7 @@ function TodoList() {
 
   const observer = useRef<IntersectionObserver | null>(null);
 
-  const { data: paginatedData, isLoading: isPaginatedLoading } = useGetAllList({
+  const { data: paginatedData, isLoading: isPaginatedLoading } = useGetList({
     all: false,
     completed: completed ? 'true' : undefined,
     keyword: debouncedKeyword,

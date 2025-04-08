@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-
+import { apiFetch } from '@/lib/fetch.util';
 type GetTodosParams = {
   all?: boolean;
   limit?: number;
@@ -16,17 +16,12 @@ const getTodos = async (params: GetTodosParams = {}) => {
   if (params.offset !== undefined) query.append('offset', String(params.offset));
   if (params.completed !== undefined) query.append('completed', params.completed);
   if (params.keyword) query.append('keyword', params.keyword);
+  const data = await apiFetch(`/api/todos?${query.toString()}`);
 
-  const response = await fetch(`/api/todos?${query.toString()}`);
-  if (!response.ok) {
-    throw new Error('네트워크 오류가 발생했습니다.');
-  }
-  const data = await response.json();
-  console.log(data.todos);
   return data.todos || [];
 };
 
-export const useGetAllList = (params?: GetTodosParams) => {
+export const useGetList = (params?: GetTodosParams) => {
   return useQuery({
     queryKey: ['todos', params],
     queryFn: () => getTodos(params),
@@ -37,7 +32,7 @@ export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?
   return useInfiniteQuery({
     queryKey: ['todos', 'infinite', params],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/todos?${new URLSearchParams({
           all: 'true',
           completed: params?.completed || '',
@@ -47,23 +42,14 @@ export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?
         }).toString()}`,
       );
 
-      if (!response.ok) {
-        throw new Error('네트워크 오류가 발생했습니다.');
-      }
-
-      const data = await response.json();
-      return data.todos || [];
+      return response.todos || [];
     },
     getNextPageParam: (lastPage, allPages) => {
       if (lastPage.length < 10) return undefined;
       return allPages.reduce((acc, page) => acc + page.length, 0);
     },
     initialPageParam: 0,
-    staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 1,
-    retryDelay: 1000,
+    refetchOnWindowFocus: true,
     enabled: options?.enabled ?? true,
   });
 };
@@ -73,16 +59,8 @@ const getTodoDetail = async (id: number | null) => {
   if (id === null) {
     return null;
   }
-
-  const response = await fetch(`/api/todos/${id}`);
-
-  if (!response.ok) {
-    throw new Error('할 일을 조회하는데 실패했습니다.');
-  }
-
-  const data = await response.json();
-
-  return data.todo || null;
+  const response = await apiFetch(`/api/todos/${id}`);
+  return response.todo || null;
 };
 
 export const useGetTodoDetail = (id: number | null) => {
