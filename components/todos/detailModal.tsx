@@ -99,7 +99,11 @@ export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
               취소
             </Button>
-            <Button type="submit" disabled={isLoading || hasError || isPending}>
+            <Button
+              type="submit"
+              className="bg-blue-400 hover:bg-blue-600 text-white"
+              disabled={isLoading || hasError || isPending}
+            >
               {isPending ? '저장 중...' : '저장'}
             </Button>
           </DialogFooter>

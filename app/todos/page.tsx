@@ -234,7 +234,7 @@ function TodoList() {
                                 <Ellipsis className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="flex flex-col justify-center items-center">
+                            <DropdownMenuContent className="flex flex-col justify-center items-center gap-2 p-2">
                               <DropdownMenuItem
                                 onSelect={() => {
                                   setDetailOpen(true);
@@ -254,7 +254,7 @@ function TodoList() {
               )}
             </Accordion>
           </div>
-          <div className="fixed bottom-10 right-24">
+          <div className="fixed bottom-10 right-10">
             <Button
               onClick={(e) => {
                 e.stopPropagation();
@@ -262,6 +262,7 @@ function TodoList() {
               }}
               variant="outline"
               size="icon"
+              className="rounded-full bg-blue-400 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 p-8"
             >
               <Plus />
             </Button>
@@ -361,7 +362,7 @@ function TodoList() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelDelete}>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>
+            <AlertDialogAction className="bg-red-400 hover:bg-red-600 text-white" onClick={handleConfirmDelete}>
               {isDeleting ? (
                 <>
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />

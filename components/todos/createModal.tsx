@@ -87,7 +87,7 @@ export function TodoCreateModal({ open, onOpenChange }: TodoCreateModalProps) {
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={isPending}>
+              <Button className="bg-blue-400 hover:bg-blue-600 text-white" type="submit" disabled={isPending}>
                 {isPending ? '추가 중...' : '추가'}
               </Button>
             </DialogFooter>
