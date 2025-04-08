@@ -86,7 +86,7 @@ function TodoList() {
     isLoading: isInfiniteLoading,
   } = useGetInfiniteList(
     {
-      all: true,
+      all: isInfiniteMode,
       completed: completed ? 'true' : undefined,
       keyword: debouncedKeyword,
       limit: LIMIT,
