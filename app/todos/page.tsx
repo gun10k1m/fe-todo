@@ -33,7 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { FilterIcon, LoaderCircle, SearchIcon, Ellipsis, Plus } from 'lucide-react';
+import { FilterIcon, LoaderCircle, SearchIcon, Ellipsis, Plus, Home } from 'lucide-react';
 import { TodoProps } from '@/interfaces/todos.interface';
 import { useGetList, useGetInfiniteList } from '@/queries/todos/queries';
 import { useDeleteTodo, usePatchCompletedList } from '@/queries/todos/mutation';
@@ -42,6 +42,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { TodoDetailModal } from '@/components/todos/detailModal';
 import { TodoCreateModal } from '@/components/todos/createModal';
 import { toast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 const LIMIT = 10;
 
@@ -151,8 +152,14 @@ function TodoList() {
     (Array.isArray(paginatedData) && paginatedData.length === 0 && !isPaginatedLoading && !isInfiniteMode);
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold text-center mb-8">📋 My Todo List</h1>
+    <div className="max-w-3xl mx-auto px-6 py-10 relative">
+      <div className="flex items-center gap-2 absolute top-10 left-6">
+        <Link href="/" className="text-muted-foreground">
+          <Home />
+        </Link>
+      </div>
+
+      <h1 className="text-3xl font-bold text-center mb-8 animate-bounce">📋 My Todo List</h1>
 
       <div className="flex flex-col md:flex-row items-center gap-4 mb-6 relative">
         <div className="flex items-center gap-2 absolute left-3 top-3">
@@ -213,7 +220,7 @@ function TodoList() {
                       <Checkbox
                         checked={todo.completed}
                         onCheckedChange={() => patchCompleted({ id: todo.id, completed: !todo.completed })}
-                        className="mt-6 data-[state=checked]:bg-green-500"
+                        className="mt-6 data-[state=checked]:bg-blue-600"
                       />
                       <div className="flex-1">
                         <AccordionTrigger className="text-left">
