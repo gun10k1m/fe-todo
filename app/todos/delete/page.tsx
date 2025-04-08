@@ -23,6 +23,8 @@ import {
 export default function DeletePage() {
   const { data, isLoading, error } = useGetAllList();
   const { mutate: patchCompleted } = usePatchCompletedList();
+
+  
   const { mutate: deleteTodo, isPending: isDeleting } = useDeleteTodo();
   const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);

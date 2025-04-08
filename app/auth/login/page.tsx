@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useLoginMutation } from '@/queries/auth/mutation';
-import { LoaderCircle } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 
 const loginFormSchema = z.object({
   email: z.string().min(1, { message: '이메일을 입력해주세요.' }).email('이메일 형식이 올바르지 않습니다.'),
@@ -19,6 +20,8 @@ const loginFormSchema = z.object({
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+
   const form = useForm<LoginFormValues>({
     defaultValues: {
       email: '',
@@ -39,7 +42,6 @@ export default function LoginPage() {
         <h1 className="text-3xl font-semibold text-center text-gray-800 mb-6">로그인</h1>
         <Form {...form}>
           <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(onSubmit)}>
-            {/* 이메일 */}
             <FormField
               control={form.control}
               name="email"
@@ -56,7 +58,6 @@ export default function LoginPage() {
               )}
             />
 
-            {/* 비밀번호 */}
             <FormField
               control={form.control}
               name="password"
@@ -66,14 +67,27 @@ export default function LoginPage() {
                     <span className="text-red-500">*</span> 비밀번호
                   </FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="비밀번호를 입력해주세요" {...field} />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="비밀번호를 입력해주세요"
+                        {...field}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer hover:bg-transparent "
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </Button>
+                    </div>
                   </FormControl>
                   <FormMessage className="text-xs text-red-500 mt-1" />
                 </FormItem>
               )}
             />
 
-            {/* 로그인 버튼 */}
             <Button type="submit" className="w-full mt-2 bg-blue-400 hover:bg-blue-600 text-white">
               로그인
             </Button>
