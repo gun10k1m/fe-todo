@@ -148,12 +148,13 @@ function TodoList() {
 
   useEffect(() => {
     const params = new URLSearchParams();
+    params.set('all', isInfiniteMode ? 'true' : 'false');
     params.set('completed', completed ? 'true' : 'false');
     if (keyword) params.set('keyword', keyword);
     if (offset > 0) params.set('offset', offset.toString());
 
     router.replace(`/todos?${params.toString()}`);
-  }, [completed, keyword, offset, router]);
+  }, [completed, keyword, offset, isInfiniteMode, router]);
 
   const isLastPage = !isInfiniteMode && offset + LIMIT > paginatedData?.totalCount;
   const isFirstPage = offset === 0;
