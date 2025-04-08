@@ -234,7 +234,7 @@ function TodoList() {
                                 <Ellipsis className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="flex flex-col justify-center items-center gap-2 p-2">
+                            <DropdownMenuContent className="flex flex-col justify-center items-center">
                               <DropdownMenuItem
                                 onSelect={() => {
                                   setDetailOpen(true);
@@ -357,7 +357,7 @@ function TodoList() {
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>할 일 삭제</AlertDialogTitle>
+            <AlertDialogTitle>Todo 삭제</AlertDialogTitle>
             <AlertDialogDescription>정말로 이 할 일을 삭제하시겠습니까?</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
