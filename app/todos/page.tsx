@@ -43,7 +43,7 @@ import { TodoDetailModal } from '@/components/todos/detailModal';
 import { TodoCreateModal } from '@/components/todos/createModal';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
-
+import { useRouter } from 'next/navigation';
 const LIMIT = 10;
 
 const getValidOffset = (param: string | null): number => {
@@ -53,6 +53,7 @@ const getValidOffset = (param: string | null): number => {
 
 function TodoList() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const completedParam = searchParams.get('completed');
   const keywordParam = searchParams.get('keyword') || '';
   const offsetParam = searchParams.get('offset');
@@ -144,6 +145,15 @@ function TodoList() {
   useEffect(() => {
     setOffset(0);
   }, [completed, debouncedKeyword]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set('completed', completed ? 'true' : 'false');
+    if (keyword) params.set('keyword', keyword);
+    if (offset > 0) params.set('offset', offset.toString());
+
+    router.replace(`/todos?${params.toString()}`);
+  }, [completed, keyword, offset, router]);
 
   const isLastPage = !isInfiniteMode && offset + LIMIT > paginatedData?.totalCount;
   const isFirstPage = offset === 0;
