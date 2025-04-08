@@ -51,7 +51,6 @@ const getValidOffset = (param: string | null): number => {
 
 function TodoList() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const completedParam = searchParams.get('completed');
   const keywordParam = searchParams.get('keyword') || '';
   const offsetParam = searchParams.get('offset');
