@@ -17,7 +17,6 @@ export default function QueryClientProvider({ children }: { children: React.Reac
           },
           mutations: {
             onError: (error: any) => {
-              console.error('Mutation 오류:', error);
               toast({
                 variant: 'destructive',
                 title: '에러 발생',
