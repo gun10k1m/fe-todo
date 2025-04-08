@@ -142,7 +142,7 @@ function TodoList() {
 
   useEffect(() => {
     setOffset(0);
-  }, [completed, debouncedKeyword]);
+  }, [completed, debouncedKeyword, isInfiniteMode]);
 
   const isLastPage = !isInfiniteMode && offset + LIMIT > paginatedData?.totalCount;
   const isFirstPage = offset === 0;
@@ -241,11 +241,17 @@ function TodoList() {
                                   setDetailOpen(true);
                                   setSelectedTodoId(todo.id);
                                 }}
+                                className="cursor-pointer w-full flex justify-center"
                               >
                                 수정
                               </DropdownMenuItem>
                               <DropdownMenuSeparator className="w-full" />
-                              <DropdownMenuItem onSelect={() => handleDeleteClick(todo.id)}>삭제</DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() => handleDeleteClick(todo.id)}
+                                className="cursor-pointer w-full flex justify-center"
+                              >
+                                삭제
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
