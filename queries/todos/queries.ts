@@ -49,7 +49,6 @@ export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?
       return allPages.reduce((acc, page) => acc + page.length, 0);
     },
     initialPageParam: 0,
-    refetchOnWindowFocus: true,
     enabled: options?.enabled ?? true,
   });
 };
