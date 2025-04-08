@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { FilterIcon, LoaderCircle, SearchIcon, Ellipsis, Plus, Home } from 'lucide-react';
 import { TodoProps } from '@/interfaces/todos.interface';
-import { useGetList, useGetInfiniteList } from '@/queries/todos/queries';
+import { useGetList, useGetInfiniteList, getTodos } from '@/queries/todos/queries';
 import { useDeleteTodo, usePatchCompletedList } from '@/queries/todos/mutation';
 import { useSearchParams } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -44,6 +44,7 @@ import { TodoCreateModal } from '@/components/todos/createModal';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 const LIMIT = 10;
 
 const getValidOffset = (param: string | null): number => {
@@ -53,6 +54,7 @@ const getValidOffset = (param: string | null): number => {
 
 function TodoList() {
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const completedParam = searchParams.get('completed');
   const keywordParam = searchParams.get('keyword') || '';
@@ -156,6 +158,60 @@ function TodoList() {
     router.replace(`/todos?${params.toString()}`);
   }, [completed, keyword, offset, isInfiniteMode, router]);
 
+  useEffect(() => {
+    if (!isInfiniteMode && paginatedData && paginatedData.length === LIMIT) {
+      const nextOffset = offset + LIMIT;
+      queryClient.prefetchQuery({
+        queryKey: [
+          'todos',
+          {
+            all: false,
+            completed: completed ? 'true' : undefined,
+            keyword: debouncedKeyword,
+            offset: nextOffset,
+            limit: LIMIT,
+          },
+        ],
+        queryFn: () =>
+          getTodos({
+            all: false,
+            completed: completed ? 'true' : undefined,
+            keyword: debouncedKeyword,
+            offset: nextOffset,
+            limit: LIMIT,
+          }),
+      });
+    }
+  }, [queryClient, offset, isInfiniteMode, completed, debouncedKeyword, paginatedData]);
+
+  useEffect(() => {
+    if (isInfiniteMode && hasNextPage && infiniteData) {
+      const nextOffset = infiniteData.pages.flat().length;
+
+      queryClient.prefetchQuery({
+        queryKey: [
+          'todos',
+          'infinite',
+          {
+            all: true,
+            completed: completed ? 'true' : undefined,
+            keyword: debouncedKeyword,
+            offset: nextOffset,
+            limit: LIMIT,
+          },
+        ],
+        queryFn: () =>
+          getTodos({
+            all: true,
+            completed: completed ? 'true' : undefined,
+            keyword: debouncedKeyword,
+            offset: nextOffset,
+            limit: LIMIT,
+          }),
+      });
+    }
+  }, [queryClient, infiniteData, hasNextPage, isInfiniteMode, completed, debouncedKeyword]);
+
   const isLastPage = !isInfiniteMode && offset + LIMIT > paginatedData?.totalCount;
   const isFirstPage = offset === 0;
   const hasNoData =
@@ -172,7 +228,7 @@ function TodoList() {
 
       <h1 className="text-3xl font-bold text-center mb-8 animate-bounce">📋 My Todo List</h1>
 
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-6 relative">
+      <div className="flex md:flex-row items-center gap-4 mb-6 relative">
         <div className="flex items-center gap-2 absolute left-3 top-3">
           <SearchIcon className="h-4 w-4" />
         </div>

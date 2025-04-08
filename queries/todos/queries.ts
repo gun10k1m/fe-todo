@@ -8,7 +8,7 @@ type GetTodosParams = {
   keyword?: string;
 };
 
-const getTodos = async (params: GetTodosParams = {}) => {
+export const getTodos = async (params: GetTodosParams = {}) => {
   const query = new URLSearchParams();
 
   if (params.all !== undefined) query.append('all', String(params.all));
