@@ -112,7 +112,7 @@ export default function SignupPage() {
 
         <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
-            이미 계정이 있으신가요?
+            이미 계정이 있으신가요?{' '}
             <Link
               href="/auth/login"
               className="text-blue-400 hover:text-blue-700 hover:underline font-medium transition"
