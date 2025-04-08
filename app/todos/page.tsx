@@ -217,9 +217,9 @@ function TodoList() {
                           className="mt-6 data-[state=checked]:bg-green-500"
                         />
                         <div className="flex-1">
-                          <AccordionTrigger>
+                          <AccordionTrigger className="text-left">
                             <div
-                              className={`font-semibold text-lg ${todo.completed ? 'line-through text-gray-400' : ''} `}
+                              className={`font-semibold text-lg ${todo.completed ? 'line-through text-gray-400' : ''}`}
                             >
                               {todo.title}
                             </div>
