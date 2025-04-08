@@ -36,7 +36,7 @@ import { FilterIcon, LoaderCircle, SearchIcon, Ellipsis, Plus } from 'lucide-rea
 import { TodoProps } from '@/interfaces/todos.interface';
 import { useGetAllList, useGetInfiniteList } from '@/queries/todos/queries';
 import { useDeleteTodo, usePatchCompletedList } from '@/queries/todos/mutation';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
 import { TodoDetailModal } from '@/components/todos/detailModal';
 import { TodoCreateModal } from '@/components/todos/createModal';
