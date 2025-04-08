@@ -8,12 +8,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Eye, EyeOff } from 'lucide-react';
 import { SignupFormValues } from '@/interfaces/auth.interface';
 import { useSignupMutation } from '@/queries/auth/mutation';
-
+import { useState } from 'react';
 export default function SignupPage() {
   const { mutate: signupMutation, isPending } = useSignupMutation();
+  const [showPassword, setShowPassword] = useState(false);
 
   const registerSchema = z.object({
     email: z.string().min(1, { message: '이메일을 입력해주세요.' }).email('이메일 형식이 올바르지 않습니다.'),
@@ -40,7 +41,6 @@ export default function SignupPage() {
         <h1 className="text-3xl font-semibold text-center text-gray-800 mb-6">회원가입</h1>
         <Form {...form}>
           <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(onSubmit)}>
-            {/* 이메일 */}
             <FormField
               control={form.control}
               name="email"
@@ -57,7 +57,6 @@ export default function SignupPage() {
               )}
             />
 
-            {/* 비밀번호 */}
             <FormField
               control={form.control}
               name="password"
@@ -67,14 +66,23 @@ export default function SignupPage() {
                     <span className="text-red-500">*</span> 비밀번호
                   </FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="8자 이상 입력해주세요" {...field} />
+                    <div className="relative">
+                      <Input type={showPassword ? 'text' : 'password'} placeholder="8자 이상 입력해주세요" {...field} />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer hover:bg-transparent "
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </Button>
+                    </div>
                   </FormControl>
                   <FormMessage className="text-xs text-red-500 mt-1" />
                 </FormItem>
               )}
             />
 
-            {/* 이름 */}
             <FormField
               control={form.control}
               name="name"
@@ -89,7 +97,6 @@ export default function SignupPage() {
               )}
             />
 
-            {/* 버튼 */}
             <Button type="submit" className="w-full mt-2 bg-blue-400 hover:bg-blue-600 text-white" disabled={isPending}>
               {isPending ? (
                 <>
@@ -105,7 +112,7 @@ export default function SignupPage() {
 
         <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
-            이미 계정이 있으신가요?{' '}
+            이미 계정이 있으신가요?
             <Link
               href="/auth/login"
               className="text-blue-400 hover:text-blue-700 hover:underline font-medium transition"
