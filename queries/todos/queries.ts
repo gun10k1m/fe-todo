@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/fetch.util';
 type GetTodosParams = {
   all?: boolean;
@@ -8,7 +8,7 @@ type GetTodosParams = {
   keyword?: string;
 };
 
-const getTodos = async (params: GetTodosParams = {}) => {
+export const getTodos = async (params: GetTodosParams = {}) => {
   const query = new URLSearchParams();
 
   if (params.all !== undefined) query.append('all', String(params.all));
@@ -25,6 +25,9 @@ export const useGetList = (params?: GetTodosParams) => {
   return useQuery({
     queryKey: ['todos', params],
     queryFn: () => getTodos(params),
+    staleTime: 1000 * 30,
+    gcTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -41,7 +44,6 @@ export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?
           limit: '10',
         }).toString()}`,
       );
-
       return response.todos || [];
     },
     getNextPageParam: (lastPage, allPages) => {
@@ -49,7 +51,9 @@ export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?
       return allPages.reduce((acc, page) => acc + page.length, 0);
     },
     initialPageParam: 0,
+    staleTime: 0,
     enabled: options?.enabled ?? true,
+    refetchOnWindowFocus: true,
   });
 };
 
