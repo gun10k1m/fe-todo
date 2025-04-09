@@ -5,18 +5,9 @@ import React from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Accordion } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
 import {
   Pagination,
   PaginationContent,
@@ -26,7 +17,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { FilterIcon, SearchIcon, Ellipsis, Plus, Home } from 'lucide-react';
+import { SearchIcon, Plus, Home } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useGetList, useGetInfiniteList, getTodos } from '@/queries/todos/queries';
 import { usePatchCompletedList } from '@/queries/todos/mutation';
@@ -35,6 +26,9 @@ import { TodoCreateModal } from '@/components/todos/createModal';
 import { AccordionSkeleton } from '@/components/todos/AccordionSkeleton';
 import { TodoProps } from '@/interfaces/todos.interface';
 import { TodoDeleteModal } from '@/components/todos/deleteModal';
+import { TodoFilterDropdown } from '@/components/todos/dropDownFilter';
+import { TodoItem } from '@/components/todos/todoItem';
+import { PaginationButton } from '@/components/todos/paginationButton';
 
 const LIMIT = 10;
 
@@ -54,15 +48,10 @@ function TodoList() {
   const [isInfiniteMode, setIsInfiniteMode] = useState(searchParams.get('all') === 'true');
   const debouncedKeyword = useDebounce(keyword, 1000);
 
-  // create
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-
   const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
 
-  // edit
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-
-  // delete
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   const observer = useRef<IntersectionObserver | null>(null);
@@ -87,16 +76,6 @@ function TodoList() {
   );
 
   const { mutate: patchCompleted } = usePatchCompletedList();
-
-  const handleDetailClick = (id: number) => {
-    setSelectedTodoId(id);
-    setDetailOpen(true);
-  };
-
-  const handleDeleteClick = (id: number) => {
-    setSelectedTodoId(id);
-    setIsAlertOpen(true);
-  };
 
   const handleInfiniteObserver = useCallback(
     (node: HTMLDivElement | null) => {
@@ -189,6 +168,7 @@ function TodoList() {
   const hasNoData =
     !paginatedData ||
     (Array.isArray(paginatedData) && paginatedData.length === 0 && !isPaginatedLoading && !isInfiniteMode);
+
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 relative">
       <Link href="/" className="absolute top-10 left-6 z-50 text-muted-foreground">
@@ -205,29 +185,15 @@ function TodoList() {
           onChange={(e) => setKeyword(e.target.value)}
           className="flex-1 pl-10"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <FilterIcon className="mr-2 h-4 w-4" /> Filter
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuCheckboxItem checked={completed} onCheckedChange={(checked) => setCompleted(!!checked)}>
-              완료된 목록
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={isInfiniteMode}
-              onCheckedChange={(checked) => {
-                setIsInfiniteMode(!!checked);
-                setCompleted(false);
-                setOffset(0);
-              }}
-            >
-              무한 스크롤
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <TodoFilterDropdown
+          completed={completed}
+          setCompleted={setCompleted}
+          isInfiniteMode={isInfiniteMode}
+          setIsInfiniteMode={setIsInfiniteMode}
+          setOffset={setOffset}
+        />
       </div>
+
       {isPaginatedLoading || isInfiniteLoading || isFetchingNextPage ? (
         <div className="py-6">
           <AccordionSkeleton count={10} />
@@ -238,58 +204,24 @@ function TodoList() {
         <Accordion type="single" collapsible className="space-y-4">
           {(isInfiniteMode ? infiniteData?.pages.flat() : paginatedData)?.map(
             (todo: TodoProps, index: number, array: TodoProps[]) => (
-              <AccordionItem
-                value={todo.id.toString()}
+              <TodoItem
                 key={todo.id}
-                ref={index === array.length - 1 ? handleInfiniteObserver : null}
-                className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex gap-4">
-                  <Checkbox
-                    checked={todo.completed}
-                    onCheckedChange={() => patchCompleted({ id: todo.id, completed: !todo.completed })}
-                    className="mt-6 data-[state=checked]:bg-blue-600"
-                  />
-                  <div className="flex-1">
-                    <AccordionTrigger className="text-left">
-                      <div className={`font-semibold text-lg ${todo.completed ? 'line-through text-gray-400' : ''}`}>
-                        {todo.title}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="text-sm text-muted-foreground mt-2">
-                      <div className="break-all">{todo.description || '설명이 없습니다.'}</div>
-                    </AccordionContent>
-                  </div>
-                  <div className="mt-3">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost">
-                          <Ellipsis className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="flex flex-col items-center">
-                        <DropdownMenuItem
-                          onSelect={() => handleDetailClick(todo.id)}
-                          className="cursor-pointer w-full flex justify-center"
-                        >
-                          수정
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="w-full" />
-                        <DropdownMenuItem
-                          onSelect={() => handleDeleteClick(todo.id)}
-                          className="cursor-pointer w-full flex justify-center"
-                        >
-                          삭제
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </AccordionItem>
+                todo={todo}
+                patchCompleted={patchCompleted}
+                setSelectedTodoId={setSelectedTodoId}
+                setDetailOpen={setDetailOpen}
+                setIsAlertOpen={setIsAlertOpen}
+                handleInfiniteObserver={index === array.length - 1 ? handleInfiniteObserver : undefined}
+              />
             ),
           )}
         </Accordion>
       )}
+
+      {!isInfiniteMode && !hasNoData && (
+        <PaginationButton isFirstPage={isFirstPage} isLastPage={isLastPage} offset={offset} setOffset={setOffset} />
+      )}
+
       <div className="fixed bottom-10 right-10">
         <Button
           onClick={() => setCreateModalOpen(true)}
@@ -301,54 +233,7 @@ function TodoList() {
         </Button>
         <TodoCreateModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
       </div>
-      {!isInfiniteMode && !hasNoData && (
-        <div className="flex justify-center mt-8">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  className={isFirstPage ? 'pointer-events-none opacity-50' : ''}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setOffset(Math.max(0, offset - LIMIT));
-                  }}
-                />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink href="#" isActive onClick={(e) => e.preventDefault()}>
-                  {offset / LIMIT + 1}
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink
-                  href="#"
-                  className={isLastPage ? 'pointer-events-none opacity-50' : ''}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!isLastPage) setOffset((offset / LIMIT + 1) * LIMIT);
-                  }}
-                >
-                  {offset / LIMIT + 2}
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  className={isLastPage ? 'pointer-events-none opacity-50' : ''}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setOffset(offset + LIMIT);
-                  }}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+
       <TodoDetailModal
         open={detailOpen}
         onOpenChange={(open) => {
