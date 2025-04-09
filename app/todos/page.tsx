@@ -61,7 +61,7 @@ function TodoList() {
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [completed, setCompleted] = useState(searchParams.get('completed') === 'true');
   const [offset, setOffset] = useState(getValidOffset(searchParams.get('offset')));
-  const [isInfiniteMode, setIsInfiniteMode] = useState(false);
+  const [isInfiniteMode, setIsInfiniteMode] = useState(searchParams.get('all') === 'true');
   const debouncedKeyword = useDebounce(keyword, 1000);
 
   const [detailOpen, setDetailOpen] = useState(false);
