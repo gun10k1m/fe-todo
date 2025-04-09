@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/fetch.util';
 type GetTodosParams = {
   all?: boolean;
@@ -22,9 +22,14 @@ export const getTodos = async (params: GetTodosParams = {}) => {
 };
 
 export const useGetList = (params?: GetTodosParams) => {
+  const shouldFetch = !params?.keyword || params.keyword.length >= 2;
   return useQuery({
     queryKey: ['todos', params],
     queryFn: () => getTodos(params),
+    staleTime: 1000 * 30,
+    gcTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
+    enabled: shouldFetch,
   });
 };
 

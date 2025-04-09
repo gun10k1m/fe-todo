@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import React from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -53,7 +53,7 @@ const getValidOffset = (param: string | null): number => {
   return isNaN(parsed) || parsed < 0 ? 0 : parsed;
 };
 
-function TodoList() {
+export default function TodoList() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -63,7 +63,7 @@ function TodoList() {
 
   const [completed, setCompleted] = useState(completedParam === 'true');
   const [keyword, setKeyword] = useState(keywordParam);
-  const debouncedKeyword = useDebounce(keyword, 200);
+  const debouncedKeyword = useDebounce(keyword, 1000);
   const [offset, setOffset] = useState(getValidOffset(offsetParam));
   const [isInfiniteMode, setIsInfiniteMode] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -74,7 +74,11 @@ function TodoList() {
 
   const observer = useRef<IntersectionObserver | null>(null);
 
-  const { data: paginatedData, isLoading: isPaginatedLoading } = useGetList({
+  const {
+    data: paginatedData,
+    isLoading: isPaginatedLoading,
+    isFetching,
+  } = useGetList({
     all: false,
     completed: completed ? 'true' : undefined,
     keyword: debouncedKeyword,
@@ -146,8 +150,13 @@ function TodoList() {
   );
 
   useEffect(() => {
-    setOffset(0);
-  }, [completed, debouncedKeyword]);
+    const completedChanged = completedParam !== String(completed);
+    const keywordChanged = keywordParam !== debouncedKeyword;
+
+    if (completedChanged || keywordChanged) {
+      setOffset(0);
+    }
+  }, [completed, completedParam, keywordParam, debouncedKeyword]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -265,7 +274,7 @@ function TodoList() {
         </DropdownMenu>
       </div>
 
-      {isPaginatedLoading && !isInfiniteMode ? (
+      {isPaginatedLoading || isFetching ? (
         <div className="py-6">
           <AccordionSkeleton count={10} />
         </div>
@@ -456,13 +465,5 @@ function TodoList() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
-}
-
-export default function GetAllList() {
-  return (
-    <Suspense fallback={<div className="flex justify-center items-center h-screen">로딩 중...</div>}>
-      <TodoList />
-    </Suspense>
   );
 }
