@@ -54,6 +54,10 @@ export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?
       return allPages.reduce((acc, page) => acc + page.length, 0);
     },
     initialPageParam: 0,
+    staleTime: 1000 * 10,
+    gcTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
+    refetchInterval: 10000,
     enabled: options?.enabled ?? true,
   });
 };
