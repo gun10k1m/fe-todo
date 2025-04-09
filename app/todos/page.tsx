@@ -26,25 +26,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { FilterIcon, LoaderCircle, SearchIcon, Ellipsis, Plus, Home } from 'lucide-react';
+import { FilterIcon, SearchIcon, Ellipsis, Plus, Home } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { toast } from '@/hooks/use-toast';
 import { useGetList, useGetInfiniteList, getTodos } from '@/queries/todos/queries';
-import { useDeleteTodo, usePatchCompletedList } from '@/queries/todos/mutation';
+import { usePatchCompletedList } from '@/queries/todos/mutation';
 import { TodoDetailModal } from '@/components/todos/detailModal';
 import { TodoCreateModal } from '@/components/todos/createModal';
 import { AccordionSkeleton } from '@/components/todos/AccordionSkeleton';
 import { TodoProps } from '@/interfaces/todos.interface';
+import { TodoDeleteModal } from '@/components/todos/deleteModal';
 
 const LIMIT = 10;
 
@@ -64,11 +54,13 @@ function TodoList() {
   const [isInfiniteMode, setIsInfiniteMode] = useState(searchParams.get('all') === 'true');
   const debouncedKeyword = useDebounce(keyword, 1000);
 
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
+
   const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -92,23 +84,10 @@ function TodoList() {
   );
 
   const { mutate: patchCompleted } = usePatchCompletedList();
-  const { mutate: deleteTodo, isPending: isDeleting } = useDeleteTodo();
 
   const handleDeleteClick = (id: number) => {
     setTodoToDelete(id);
     setIsAlertOpen(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (todoToDelete !== null) {
-      deleteTodo(todoToDelete, {
-        onSuccess: () => {
-          toast({ title: '삭제 완료', description: '할 일이 성공적으로 삭제되었습니다.' });
-          setTodoToDelete(null);
-          setIsAlertOpen(false);
-        },
-      });
-    }
   };
 
   const handleInfiniteObserver = useCallback(
@@ -196,6 +175,7 @@ function TodoList() {
       });
     }
   }, [infiniteData, hasNextPage, isInfiniteMode, completed, debouncedKeyword, queryClient]);
+
   const isLastPage = !isInfiniteMode && offset + LIMIT > paginatedData?.totalCount;
   const isFirstPage = offset === 0;
   const hasNoData =
@@ -372,27 +352,16 @@ function TodoList() {
           if (!open) setSelectedTodoId(null);
         }}
       />
-      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Todo 삭제</AlertDialogTitle>
-            <AlertDialogDescription>정말로 이 할 일을 삭제하시겠습니까?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsAlertOpen(false)}>취소</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-400 hover:bg-red-600 text-white" onClick={handleConfirmDelete}>
-              {isDeleting ? (
-                <>
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  삭제 중...
-                </>
-              ) : (
-                '삭제'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <TodoDeleteModal
+        open={isAlertOpen}
+        onOpenChange={(open) => {
+          setIsAlertOpen(open);
+        }}
+        id={todoToDelete}
+        setId={(id) => {
+          setTodoToDelete(id);
+        }}
+      />
     </div>
   );
 }
