@@ -45,6 +45,7 @@ import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { AccordionSkeleton } from '@/components/todos/AccordionSkeleton';
 const LIMIT = 10;
 
 const getValidOffset = (param: string | null): number => {
@@ -265,9 +266,8 @@ function TodoList() {
       </div>
 
       {isPaginatedLoading && !isInfiniteMode ? (
-        <div className="flex justify-center items-center h-40 text-muted-foreground">
-          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-          로딩 중...
+        <div className="py-6">
+          <AccordionSkeleton count={10} />
         </div>
       ) : hasNoData && !isInfiniteMode ? (
         <div className="flex justify-center items-center h-40 text-muted-foreground">불러올 데이터가 없습니다</div>
