@@ -54,12 +54,15 @@ function TodoList() {
   const [isInfiniteMode, setIsInfiniteMode] = useState(searchParams.get('all') === 'true');
   const debouncedKeyword = useDebounce(keyword, 1000);
 
+  // create
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  const [detailOpen, setDetailOpen] = useState(false);
   const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
 
-  const [todoToDelete, setTodoToDelete] = useState<number | null>(null);
+  // edit
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  // delete
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   const observer = useRef<IntersectionObserver | null>(null);
@@ -85,8 +88,13 @@ function TodoList() {
 
   const { mutate: patchCompleted } = usePatchCompletedList();
 
+  const handleDetailClick = (id: number) => {
+    setSelectedTodoId(id);
+    setDetailOpen(true);
+  };
+
   const handleDeleteClick = (id: number) => {
-    setTodoToDelete(id);
+    setSelectedTodoId(id);
     setIsAlertOpen(true);
   };
 
@@ -261,10 +269,7 @@ function TodoList() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="flex flex-col items-center">
                         <DropdownMenuItem
-                          onSelect={() => {
-                            setDetailOpen(true);
-                            setSelectedTodoId(todo.id);
-                          }}
+                          onSelect={() => handleDetailClick(todo.id)}
                           className="cursor-pointer w-full flex justify-center"
                         >
                           수정
@@ -345,22 +350,21 @@ function TodoList() {
         </div>
       )}
       <TodoDetailModal
-        id={selectedTodoId}
         open={detailOpen}
         onOpenChange={(open) => {
           setDetailOpen(open);
           if (!open) setSelectedTodoId(null);
         }}
+        id={selectedTodoId}
+        setId={(id) => setSelectedTodoId(id)}
       />
       <TodoDeleteModal
         open={isAlertOpen}
         onOpenChange={(open) => {
           setIsAlertOpen(open);
         }}
-        id={todoToDelete}
-        setId={(id) => {
-          setTodoToDelete(id);
-        }}
+        id={selectedTodoId}
+        setId={(id) => setSelectedTodoId(id)}
       />
     </div>
   );

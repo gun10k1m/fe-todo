@@ -9,17 +9,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
+import { SelectTodoProps } from '@/interfaces/todos.interface';
 import { useDeleteTodo } from '@/queries/todos/mutation';
 import { LoaderCircle } from 'lucide-react';
 
-interface TodoDeleteModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  id: number | null;
-  setId: (id: number | null) => void;
-}
-
-export function TodoDeleteModal({ open, onOpenChange, id, setId }: TodoDeleteModalProps) {
+export function TodoDeleteModal({ open, onOpenChange, id, setId }: SelectTodoProps) {
   const { mutate: deleteTodo, isPending: isDeleting } = useDeleteTodo();
 
   const handleConfirmDelete = () => {
