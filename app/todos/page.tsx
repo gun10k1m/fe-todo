@@ -8,15 +8,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Accordion } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
 import { SearchIcon, Plus, Home } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useGetList, useGetInfiniteList, getTodos } from '@/queries/todos/queries';
