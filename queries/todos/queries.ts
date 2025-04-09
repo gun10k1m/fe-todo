@@ -32,8 +32,6 @@ export const useGetList = (params?: GetTodosParams) => {
 };
 
 export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?: boolean }) => {
-  console.log('isEnabled:', options?.enabled ?? true);
-
   return useInfiniteQuery({
     queryKey: ['todos', 'infinite', params],
     queryFn: async ({ pageParam = 0 }) => {

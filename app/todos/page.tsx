@@ -44,7 +44,7 @@ import { TodoCreateModal } from '@/components/todos/createModal';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQueryClient } from '@tanstack/react-query';
 import { AccordionSkeleton } from '@/components/todos/AccordionSkeleton';
 const LIMIT = 10;
 
@@ -74,11 +74,7 @@ export default function TodoList() {
 
   const observer = useRef<IntersectionObserver | null>(null);
 
-  const {
-    data: paginatedData,
-    isLoading: isPaginatedLoading,
-    isFetching,
-  } = useGetList({
+  const { data: paginatedData, isLoading: isPaginatedLoading } = useGetList({
     all: false,
     completed: completed ? 'true' : undefined,
     keyword: debouncedKeyword,
@@ -157,7 +153,7 @@ export default function TodoList() {
     };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     const completedChanged = completedParam !== String(completed);
@@ -284,7 +280,7 @@ export default function TodoList() {
         </DropdownMenu>
       </div>
 
-      {isPaginatedLoading || isFetching ? (
+      {isPaginatedLoading ? (
         <div className="py-6">
           <AccordionSkeleton count={10} />
         </div>
