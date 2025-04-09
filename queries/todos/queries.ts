@@ -22,18 +22,18 @@ export const getTodos = async (params: GetTodosParams = {}) => {
 };
 
 export const useGetList = (params?: GetTodosParams) => {
-  const shouldFetch = !params?.keyword || params.keyword.length >= 2;
   return useQuery({
     queryKey: ['todos', params],
     queryFn: () => getTodos(params),
     staleTime: 1000 * 30,
     gcTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
-    enabled: shouldFetch,
   });
 };
 
 export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?: boolean }) => {
+  console.log('isEnabled:', options?.enabled ?? true);
+
   return useInfiniteQuery({
     queryKey: ['todos', 'infinite', params],
     queryFn: async ({ pageParam = 0 }) => {
@@ -46,7 +46,6 @@ export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?
           limit: '10',
         }).toString()}`,
       );
-
       return response.todos || [];
     },
     getNextPageParam: (lastPage, allPages) => {
@@ -54,11 +53,9 @@ export const useGetInfiniteList = (params?: GetTodosParams, options?: { enabled?
       return allPages.reduce((acc, page) => acc + page.length, 0);
     },
     initialPageParam: 0,
-    staleTime: 1000 * 10,
-    gcTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: true,
-    refetchInterval: 10000,
+    staleTime: 0,
     enabled: options?.enabled ?? true,
+    refetchOnWindowFocus: true,
   });
 };
 

@@ -150,6 +150,16 @@ export default function TodoList() {
   );
 
   useEffect(() => {
+    const onFocus = () => {
+      queryClient.invalidateQueries({
+        queryKey: ['todos', 'infinite'],
+      });
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
+
+  useEffect(() => {
     const completedChanged = completedParam !== String(completed);
     const keywordChanged = keywordParam !== debouncedKeyword;
 
