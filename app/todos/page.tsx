@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import React from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -53,7 +53,7 @@ const getValidOffset = (param: string | null): number => {
   return isNaN(parsed) || parsed < 0 ? 0 : parsed;
 };
 
-export default function TodoList() {
+function TodoList() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
@@ -394,5 +394,13 @@ export default function TodoList() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function GetTodoList() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-screen">로딩 중...</div>}>
+      <TodoList />
+    </Suspense>
   );
 }
