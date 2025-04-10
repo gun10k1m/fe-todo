@@ -9,14 +9,9 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { useUpdateTodo } from '@/queries/todos/mutation';
 import { toast } from '@/hooks/use-toast';
+import { SelectTodoProps } from '@/interfaces/todos.interface';
 
-interface TodoDetailModalProps {
-  id: number | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps) {
+export function TodoDetailModal({ open, onOpenChange, id, setId }: SelectTodoProps) {
   const { data, isLoading, error } = useGetTodoDetail(open ? id : null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -49,6 +44,7 @@ export function TodoDetailModal({ id, open, onOpenChange }: TodoDetailModalProps
               title: '수정 완료',
               description: '할 일이 성공적으로 수정되었습니다.',
             });
+            setId(null);
             onOpenChange(false);
           },
         },
