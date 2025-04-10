@@ -154,7 +154,8 @@ function TodoList() {
     }
   }, [infiniteData, hasNextPage, isInfiniteMode, completed, debouncedKeyword, queryClient]);
 
-  const isLastPage = !isInfiniteMode && offset + LIMIT > paginatedData?.totalCount;
+  const paginatedTodos = paginatedData || [];
+  const isLastPage = !isInfiniteMode && paginatedTodos.length < LIMIT;
   const isFirstPage = offset === 0;
   const hasNoData =
     !paginatedData ||
@@ -209,7 +210,7 @@ function TodoList() {
         </Accordion>
       )}
 
-      {!isInfiniteMode && !hasNoData && (
+      {!isInfiniteMode && (
         <PaginationButton isFirstPage={isFirstPage} isLastPage={isLastPage} offset={offset} setOffset={setOffset} />
       )}
 
